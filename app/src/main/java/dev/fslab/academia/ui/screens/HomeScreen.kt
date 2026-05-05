@@ -39,14 +39,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,13 +60,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.fslab.academia.ui.components.AppNavigationBar
+import dev.fslab.academia.ui.components.MAIS_ROUTE
+import dev.fslab.academia.ui.components.MaisMenuBottomSheet
+import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.AcademiaTheme
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
 
 // ─── Dados mockados ───────────────────────────────────────────────────────────
 
 private data class DiaSemana(val abrev: String, val numero: Int, val hoje: Boolean = false)
-private data class NavItem(val label: String, val icon: ImageVector)
 
 private val diasSemana = listOf(
     DiaSemana("DOM", 10),
@@ -77,14 +78,6 @@ private val diasSemana = listOf(
     DiaSemana("QUA", 13),
     DiaSemana("QUI", 14),
     DiaSemana("SEX", 15),
-)
-
-private val navItems = listOf(
-    NavItem("Início", Icons.Filled.Home),
-    NavItem("Treinos", Icons.Filled.FitnessCenter),
-    NavItem("Chat", Icons.Filled.Chat),
-    NavItem("Histórico", Icons.Filled.History),
-    NavItem("Perfil", Icons.Filled.Person),
 )
 
 // ─── HomeScreen ───────────────────────────────────────────────────────────────
@@ -98,52 +91,30 @@ fun HomeScreen(
     onToggleTheme: () -> Unit = {},
     onLogout: () -> Unit = {},
     onOpenExercicios: () -> Unit = {},
-    onOpenTreinos: () -> Unit = {}
+    onOpenTreinos: () -> Unit = {},
+    onRetomarSessao: () -> Unit = {},
+    onNavigateTab: (String) -> Unit = {},
+    temSessaoAtiva: Boolean = false
 ) {
     val colors = LocalAcademiaColors.current
-    var navSelected by remember { mutableIntStateOf(0) }
+    var mostrarMaisMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = colors.background,
         bottomBar = {
-            NavigationBar(
-                containerColor = colors.surface,
-                tonalElevation = 0.dp
-            ) {
-                navItems.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        selected = index == navSelected,
-                        onClick = {
-                            navSelected = index
-                            if (index == 1) {
-                                onOpenTreinos()
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.label,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item.label,
-                                fontSize = 10.sp,
-                                fontWeight = if (index == navSelected) FontWeight.SemiBold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = colors.primary,
-                            selectedTextColor = colors.primary,
-                            unselectedIconColor = colors.textSecondary,
-                            unselectedTextColor = colors.textSecondary,
-                            indicatorColor = Color.Transparent
-                        )
-                    )
+            AppNavigationBar(
+                items = alunoNavItems,
+                selectedIndex = 0,
+                onItemSelected = { idx ->
+                    val route = alunoNavItems[idx].route
+                    when {
+                        route == MAIS_ROUTE -> mostrarMaisMenu = true
+                        route == "treinos" -> onOpenTreinos()
+                        else -> onNavigateTab(route)
+                    }
                 }
-            }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -318,6 +289,48 @@ fun HomeScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // ── Banner sessão em andamento ───────────────────────────
+            if (temSessaoAtiva) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(colors.primary.copy(alpha = 0.12f))
+                        .border(1.dp, colors.primary.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                        .clickable { onRetomarSessao() }
+                        .padding(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(colors.primary.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = "Retomar treino", tint = colors.primary, modifier = Modifier.size(22.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = "TREINO EM ANDAMENTO",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.primary,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "Toque para retomar",
+                                fontSize = 13.sp,
+                                color = colors.textPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             // ── Card do treino ───────────────────────────────────────
             Box(
@@ -609,6 +622,13 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    if (mostrarMaisMenu) {
+        MaisMenuBottomSheet(
+            onDismiss = { mostrarMaisMenu = false },
+            onNavegar = { route -> onNavigateTab(route) }
+        )
     }
 }
 

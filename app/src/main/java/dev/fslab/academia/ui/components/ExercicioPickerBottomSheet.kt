@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
@@ -80,6 +81,7 @@ fun ExercicioPickerBottomSheet(
     val filtros by viewModel.filtros.collectAsState()
 
     var busca by remember { mutableStateOf(filtros.busca) }
+    var mostrarMapa by remember { mutableStateOf(false) }
     var menuGrupoAberto by remember { mutableStateOf(false) }
 
     LaunchedEffect(busca) {
@@ -157,50 +159,15 @@ fun ExercicioPickerBottomSheet(
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // 1. Mapa corporal (visual)
                 FilterChip(
-                    selected = filtros.escopo == EscopoExercicio.PESSOAL,
-                    onClick = {
-                        val novo = if (filtros.escopo == EscopoExercicio.PESSOAL)
-                            EscopoExercicio.TODOS else EscopoExercicio.PESSOAL
-                        viewModel.atualizarFiltros(filtros.copy(escopo = novo))
-                    },
-                    label = { Text("Pessoais") },
-                    leadingIcon = { Icon(Icons.Filled.Person, null, modifier = Modifier.size(16.dp)) },
+                    selected = filtros.grupoMuscular != null || mostrarMapa,
+                    onClick = { mostrarMapa = !mostrarMapa },
+                    label = { Text(if (!mostrarMapa && filtros.grupoMuscular != null) filtros.grupoMuscular!!.display else "Mapa corporal") },
+                    leadingIcon = { Icon(Icons.Filled.Map, null, modifier = Modifier.size(16.dp)) },
                     colors = chipColors()
                 )
-                FilterChip(
-                    selected = filtros.escopo == EscopoExercicio.GLOBAL,
-                    onClick = {
-                        val novo = if (filtros.escopo == EscopoExercicio.GLOBAL)
-                            EscopoExercicio.TODOS else EscopoExercicio.GLOBAL
-                        viewModel.atualizarFiltros(filtros.copy(escopo = novo))
-                    },
-                    label = { Text("Globais") },
-                    leadingIcon = { Icon(Icons.Filled.Public, null, modifier = Modifier.size(16.dp)) },
-                    colors = chipColors()
-                )
-                FilterChip(
-                    selected = filtros.emUso == true,
-                    onClick = {
-                        val proximo = when (filtros.emUso) {
-                            null -> true
-                            true -> false
-                            false -> null
-                        }
-                        viewModel.atualizarFiltros(filtros.copy(emUso = proximo))
-                    },
-                    label = {
-                        Text(
-                            when (filtros.emUso) {
-                                true -> "Em uso"
-                                false -> "Sem treino"
-                                null -> "Em uso"
-                            }
-                        )
-                    },
-                    leadingIcon = { Icon(Icons.Filled.Bookmark, null, modifier = Modifier.size(16.dp)) },
-                    colors = chipColors()
-                )
+                // 2. Grupo muscular (dropdown texto)
                 Box {
                     FilterChip(
                         selected = filtros.grupoMuscular != null,
@@ -231,6 +198,58 @@ fun ExercicioPickerBottomSheet(
                         }
                     }
                 }
+                // 3. Pessoais
+                FilterChip(
+                    selected = filtros.escopo == EscopoExercicio.PESSOAL,
+                    onClick = {
+                        val novo = if (filtros.escopo == EscopoExercicio.PESSOAL)
+                            EscopoExercicio.TODOS else EscopoExercicio.PESSOAL
+                        viewModel.atualizarFiltros(filtros.copy(escopo = novo))
+                    },
+                    label = { Text("Pessoais") },
+                    leadingIcon = { Icon(Icons.Filled.Person, null, modifier = Modifier.size(16.dp)) },
+                    colors = chipColors()
+                )
+                // 4. Globais
+                FilterChip(
+                    selected = filtros.escopo == EscopoExercicio.GLOBAL,
+                    onClick = {
+                        val novo = if (filtros.escopo == EscopoExercicio.GLOBAL)
+                            EscopoExercicio.TODOS else EscopoExercicio.GLOBAL
+                        viewModel.atualizarFiltros(filtros.copy(escopo = novo))
+                    },
+                    label = { Text("Globais") },
+                    leadingIcon = { Icon(Icons.Filled.Public, null, modifier = Modifier.size(16.dp)) },
+                    colors = chipColors()
+                )
+                // 5. Em uso
+                FilterChip(
+                    selected = filtros.emUso == true,
+                    onClick = {
+                        val proximo = when (filtros.emUso) {
+                            null -> true
+                            true -> false
+                            false -> null
+                        }
+                        viewModel.atualizarFiltros(filtros.copy(emUso = proximo))
+                    },
+                    label = {
+                        Text(if (filtros.emUso == false) "Sem treino" else "Em uso")
+                    },
+                    leadingIcon = { Icon(Icons.Filled.Bookmark, null, modifier = Modifier.size(16.dp)) },
+                    colors = chipColors()
+                )
+            }
+
+            if (mostrarMapa) {
+                Spacer(Modifier.height(8.dp))
+                MapaCorporal(
+                    grupoSelecionado = filtros.grupoMuscular,
+                    onGrupoSelecionado = { grupo ->
+                        viewModel.atualizarFiltros(filtros.copy(grupoMuscular = grupo))
+                        if (grupo != null) mostrarMapa = false
+                    }
+                )
             }
 
             Spacer(Modifier.height(12.dp))

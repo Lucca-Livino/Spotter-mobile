@@ -1,11 +1,12 @@
 package dev.fslab.academia.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -27,12 +28,14 @@ data class NavItemData(
     val badgeCount: Int = 0
 )
 
+const val MAIS_ROUTE = "mais"
+
 val alunoNavItems = listOf(
     NavItemData("Início", Icons.Filled.Home, "home"),
     NavItemData("Treinos", Icons.Filled.FitnessCenter, "treinos"),
-    NavItemData("Chat", Icons.Filled.Chat, "chat"),
+    NavItemData("Chat", Icons.AutoMirrored.Filled.Chat, "chat"),
     NavItemData("Histórico", Icons.Filled.History, "historico"),
-    NavItemData("Perfil", Icons.Filled.Person, "perfil"),
+    NavItemData("Mais", Icons.Filled.Menu, MAIS_ROUTE),
 )
 
 val treinadorNavItems = listOf(

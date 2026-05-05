@@ -101,7 +101,8 @@ class TreinoViewModel : ViewModel() {
                         .takeIf { it.isNotEmpty() }
                         ?.joinToString(",") { it.apiValue },
                     somenteComExercicios = f.somenteComExercicios,
-                    incluirExercicios = false
+                    incluirExercicios = false,
+                    ordemTreino = "asc"
                 )
                 val pagina = resposta.data
                 val lista = pagina?.dados.orEmpty()
