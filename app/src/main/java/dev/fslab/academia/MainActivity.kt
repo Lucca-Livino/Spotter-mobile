@@ -21,6 +21,9 @@ import dev.fslab.academia.navigation.popBackStackSafely
 import dev.fslab.academia.network.CookieManager
 import dev.fslab.academia.ui.screens.HomeScreen
 import dev.fslab.academia.ui.screens.aluno.AparelhosScreen
+import dev.fslab.academia.ui.screens.aluno.HistoricoProgressaoScreen
+import dev.fslab.academia.ui.screens.aluno.HistoricoScreen
+import dev.fslab.academia.ui.viewmodel.HistoricoViewModel
 import dev.fslab.academia.ui.screens.aluno.ExercicioCatalogoScreen
 import dev.fslab.academia.ui.screens.aluno.ExercicioDetalheScreen
 import dev.fslab.academia.ui.screens.aluno.ExercicioFormScreen
@@ -310,6 +313,43 @@ fun AcademiaApp(
                             ?.set("novo_exercicio_id", idCriado)
                         navController.popBackStackSafely()
                     }
+                )
+            }
+
+            composable(Screen.Historico.route) {
+                val historicoViewModel: HistoricoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                HistoricoScreen(
+                    onNavigateTab = { route -> navController.navigateSafely(route) },
+                    onAbrirProgressao = { exercicioId, exercicioNome ->
+                        navController.navigateSafely(
+                            Screen.HistoricoProgressao.comId(exercicioId, exercicioNome)
+                        )
+                    },
+                    viewModel = historicoViewModel
+                )
+            }
+
+            composable(
+                route = Screen.HistoricoProgressao.route,
+                arguments = listOf(
+                    navArgument("exercicioId") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                    navArgument("exercicioNome") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )
+            ) { entry ->
+                val exercicioId = entry.arguments?.getString("exercicioId").orEmpty()
+                val exercicioNome = entry.arguments?.getString("exercicioNome").orEmpty()
+                val historicoViewModel: HistoricoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                HistoricoProgressaoScreen(
+                    exercicioId = exercicioId,
+                    exercicioNome = exercicioNome,
+                    onBack = { navController.popBackStackSafely() },
+                    viewModel = historicoViewModel
                 )
             }
         }

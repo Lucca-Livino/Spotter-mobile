@@ -89,3 +89,29 @@ data class SessaoSeriesUpdateRequest(
 data class SessaoExercicioUpdateRequest(
     @SerializedName("concluido") val concluido: Boolean
 )
+
+data class SessaoListItemData(
+    @SerializedName("id") val id: String,
+    @SerializedName("aluno_id") val alunoId: String,
+    @SerializedName("treino_id") val treinoId: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("inicio") val inicio: String?,
+    @SerializedName("fim") val fim: String?,
+    @SerializedName("observacoes") val observacoes: String? = null,
+    @SerializedName("treino_nome") val treinoNome: String
+)
+
+data class SessaoListPageData(
+    @SerializedName("dados") val dados: List<SessaoListItemData>,
+    @SerializedName("total") val total: Int,
+    @SerializedName("page") val page: Int,
+    @SerializedName("limite") val limite: Int,
+    @SerializedName("totalPages") val totalPages: Int
+)
+
+data class SessaoListResponse(
+    @SerializedName("error") val error: Boolean = false,
+    @SerializedName("code") val code: Int? = null,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: SessaoListPageData? = null
+)

@@ -28,7 +28,10 @@ sealed class Screen(val route: String) {
         fun retomar() = "sessao_ativa"
     }
     data object Historico : Screen("historico")
-    data object HistoricoProgressao : Screen("historico_progressao")
+    data object HistoricoProgressao : Screen("historico_progressao?exercicioId={exercicioId}&exercicioNome={exercicioNome}") {
+        fun comId(exercicioId: String, exercicioNome: String) =
+            "historico_progressao?exercicioId=$exercicioId&exercicioNome=${android.net.Uri.encode(exercicioNome)}"
+    }
     data object ExercicioCatalogo : Screen("exercicio_catalogo")
     data object Aparelhos : Screen("aparelhos")
     data object ExercicioDetalhe : Screen("exercicio_detalhe/{id}") {
