@@ -2,6 +2,17 @@ package dev.fslab.academia.model
 
 import com.google.gson.annotations.SerializedName
 
+enum class TipoExercicio(val apiValue: String) {
+    REPETICAO("REPETICAO"),
+    TEMPO("TEMPO"),
+    DISTANCIA("DISTANCIA");
+
+    companion object {
+        fun fromApi(value: String?): TipoExercicio =
+            values().firstOrNull { it.apiValue == value } ?: REPETICAO
+    }
+}
+
 data class ExercicioMusculoData(
     @SerializedName("musculo_id") val musculoId: String,
     @SerializedName("tipo_ativacao") val tipoAtivacao: String,
@@ -21,10 +32,13 @@ data class ExercicioData(
     @SerializedName("descricao") val descricao: String? = null,
     @SerializedName("animacao_url") val animacaoUrl: String? = null,
     @SerializedName("aluno_id") val alunoId: String? = null,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO",
     @SerializedName("deletado_em") val deletadoEm: String? = null,
     @SerializedName("musculos") val musculos: List<ExercicioMusculoData> = emptyList(),
     @SerializedName("aparelhos") val aparelhos: List<ExercicioAparelhoData> = emptyList()
-)
+) {
+    val tipo: TipoExercicio get() = TipoExercicio.fromApi(tipoExercicio)
+}
 
 data class ExercicioPaginationData(
     @SerializedName("dados") val dados: List<ExercicioData> = emptyList(),
@@ -77,6 +91,7 @@ data class CriarExercicioRequest(
     @SerializedName("descricao") val descricao: String? = null,
     @SerializedName("animacao_url") val animacaoUrl: String? = null,
     @SerializedName("aluno_id") val alunoId: String? = null,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO",
     @SerializedName("musculos") val musculos: List<MusculoEntradaRequest>,
     @SerializedName("aparelhos") val aparelhos: List<AparelhoEntradaRequest>? = null
 )
@@ -85,6 +100,7 @@ data class AtualizarExercicioRequest(
     @SerializedName("nome") val nome: String? = null,
     @SerializedName("descricao") val descricao: String? = null,
     @SerializedName("animacao_url") val animacaoUrl: String? = null,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String? = null,
     @SerializedName("musculos") val musculos: List<MusculoEntradaRequest>? = null,
     @SerializedName("aparelhos") val aparelhos: List<AparelhoEntradaRequest>? = null
 )

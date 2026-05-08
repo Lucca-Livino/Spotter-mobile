@@ -9,6 +9,8 @@ data class EstatisticasData(
     @SerializedName("tempo_total_minutos") val tempoTotalMinutos: Int,
     @SerializedName("media_duracao_minutos") val mediaDuracaoMinutos: Int,
     @SerializedName("volume_total_kg") val volumeTotalKg: Double,
+    @SerializedName("tempo_total_isometria_segundos") val tempoTotalIsometriaSegundos: Int = 0,
+    @SerializedName("media_tempo_isometria_segundos") val mediaTempoIsometriaSegundos: Int = 0,
     @SerializedName("sequencia_atual") val sequenciaAtual: Int,
     @SerializedName("melhor_sequencia") val melhorSequencia: Int,
     @SerializedName("treinos_por_semana_media") val treinosPorSemanaMedia: Double
@@ -18,24 +20,35 @@ data class GrupoMuscularData(
     @SerializedName("grupo_muscular") val grupoMuscular: String,
     @SerializedName("total_series") val totalSeries: Int,
     @SerializedName("volume_total_kg") val volumeTotalKg: Double,
+    @SerializedName("tempo_total_segundos") val tempoTotalSegundos: Int = 0,
     @SerializedName("percentual") val percentual: Double
 )
 
 data class ExercicioFrequenteData(
     @SerializedName("exercicio_id") val exercicioId: String,
     @SerializedName("nome") val nome: String,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO",
     @SerializedName("total_sessoes") val totalSessoes: Int,
     @SerializedName("total_series") val totalSeries: Int,
-    @SerializedName("volume_total_kg") val volumeTotalKg: Double
-)
+    @SerializedName("volume_total_kg") val volumeTotalKg: Double,
+    @SerializedName("tempo_total_segundos") val tempoTotalSegundos: Int = 0
+) {
+    val tipo: TipoExercicio get() = TipoExercicio.fromApi(tipoExercicio)
+}
 
 data class ProgressaoItemData(
     @SerializedName("data") val data: String,
     @SerializedName("sessao_id") val sessaoId: String,
-    @SerializedName("maior_carga") val maiorCarga: Double?,
-    @SerializedName("media_repeticoes") val mediaRepeticoes: Double?,
-    @SerializedName("volume_total") val volumeTotal: Double
-)
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO",
+    @SerializedName("maior_carga") val maiorCarga: Double? = null,
+    @SerializedName("media_repeticoes") val mediaRepeticoes: Double? = null,
+    @SerializedName("volume_total") val volumeTotal: Double = 0.0,
+    @SerializedName("melhor_tempo_segundos") val melhorTempoSegundos: Int? = null,
+    @SerializedName("media_tempo_segundos") val mediaTempoSegundos: Int? = null,
+    @SerializedName("tempo_total_segundos") val tempoTotalSegundos: Int = 0
+) {
+    val tipo: TipoExercicio get() = TipoExercicio.fromApi(tipoExercicio)
+}
 
 // Wrappers de resposta da API
 data class EstatisticasResponse(
