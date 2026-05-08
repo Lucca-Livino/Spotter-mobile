@@ -10,6 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,6 +26,7 @@ import dev.fslab.academia.navigation.popBackStackSafely
 import dev.fslab.academia.network.CookieManager
 import dev.fslab.academia.model.UserTipo
 import dev.fslab.academia.ui.screens.HomeScreen
+import dev.fslab.academia.ui.screens.PlaceholderScreen
 import dev.fslab.academia.ui.screens.aluno.AparelhosScreen
 import dev.fslab.academia.ui.screens.aluno.HistoricoProgressaoScreen
 import dev.fslab.academia.ui.screens.aluno.HistoricoScreen
@@ -109,7 +115,19 @@ fun AcademiaApp(
 
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route
+            startDestination = Screen.Login.route,
+            enterTransition = {
+                fadeIn(tween(220)) + slideInVertically(tween(220)) { (it * 0.04f).toInt() }
+            },
+            exitTransition = {
+                fadeOut(tween(180)) + slideOutVertically(tween(180)) { -(it * 0.04f).toInt() }
+            },
+            popEnterTransition = {
+                fadeIn(tween(220)) + slideInVertically(tween(220)) { -(it * 0.04f).toInt() }
+            },
+            popExitTransition = {
+                fadeOut(tween(180)) + slideOutVertically(tween(180)) { (it * 0.04f).toInt() }
+            }
         ) {
             composable(Screen.Login.route) {
                 LoginScreen(
@@ -367,6 +385,78 @@ fun AcademiaApp(
                     exercicioNome = exercicioNome,
                     onBack = { navController.popBackStackSafely() },
                     viewModel = historicoViewModel
+                )
+            }
+
+            composable(Screen.Cadastro.route) {
+                PlaceholderScreen(
+                    titulo = "Cadastro",
+                    descricao = "Criação de conta — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.Perfil.route) {
+                PlaceholderScreen(
+                    titulo = "Perfil",
+                    descricao = "Edição de perfil — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.Configuracoes.route) {
+                PlaceholderScreen(
+                    titulo = "Configurações",
+                    descricao = "Preferências do app — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.Chat.route) {
+                PlaceholderScreen(
+                    titulo = "Chat",
+                    descricao = "Conversa com treinador — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.ChatDetalhe.route) {
+                PlaceholderScreen(
+                    titulo = "Conversa",
+                    descricao = "Detalhes da conversa — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.Notificacoes.route) {
+                PlaceholderScreen(
+                    titulo = "Notificações",
+                    descricao = "Central de notificações — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.TreinadorAlunos.route) {
+                PlaceholderScreen(
+                    titulo = "Alunos",
+                    descricao = "Gestão de alunos — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.TreinadorAlunoDetalhe.route) {
+                PlaceholderScreen(
+                    titulo = "Detalhe do Aluno",
+                    descricao = "Perfil e treinos do aluno — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
+                )
+            }
+
+            composable(Screen.TreinadorCriarTreino.route) {
+                PlaceholderScreen(
+                    titulo = "Criar Treino",
+                    descricao = "Prescrição de treino para aluno — implementação futura",
+                    onBack = { navController.popBackStackSafely() }
                 )
             }
         }

@@ -7,6 +7,7 @@ data class SessaoSerieData(
     @SerializedName("numero_serie") val numeroSerie: Int,
     @SerializedName("repeticoes_realizadas") val repeticoesRealizadas: Int? = null,
     @SerializedName("carga_utilizada") val cargaUtilizada: String? = null,
+    @SerializedName("tempo_realizado_segundos") val tempoRealizadoSegundos: Int? = null,
     @SerializedName("status") val status: String = "PENDENTE",
     @SerializedName("observacoes") val observacoes: String? = null
 )
@@ -15,16 +16,23 @@ data class SessaoExercicioInfo(
     @SerializedName("id") val id: String,
     @SerializedName("nome") val nome: String,
     @SerializedName("descricao") val descricao: String? = null,
-    @SerializedName("animacao_url") val animacaoUrl: String? = null
-)
+    @SerializedName("animacao_url") val animacaoUrl: String? = null,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO"
+) {
+    val tipo: TipoExercicio get() = TipoExercicio.fromApi(tipoExercicio)
+}
 
 data class SessaoExercicioTemplate(
     @SerializedName("series") val series: Int,
-    @SerializedName("repeticoes") val repeticoes: String,
+    @SerializedName("repeticoes") val repeticoes: String? = null,
+    @SerializedName("duracao_sugerida_segundos") val duracaoSugeridaSegundos: Int? = null,
     @SerializedName("carga_sugerida") val cargaSugerida: String? = null,
     @SerializedName("tempo_descanso_segundos") val tempoDescansoSegundos: Int,
-    @SerializedName("ordem_execucao") val ordemExecucao: Int
-)
+    @SerializedName("ordem_execucao") val ordemExecucao: Int,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO"
+) {
+    val tipo: TipoExercicio get() = TipoExercicio.fromApi(tipoExercicio)
+}
 
 data class SessaoExercicioData(
     @SerializedName("id") val id: String,
@@ -58,6 +66,7 @@ data class SessaoResumoData(
     @SerializedName("series_concluidas") val seriesConcluidas: Int,
     @SerializedName("series_total") val seriesTotal: Int,
     @SerializedName("volume_total_kg") val volumeTotalKg: Double,
+    @SerializedName("tempo_total_isometria_segundos") val tempoTotalIsometriaSegundos: Int = 0,
     @SerializedName("taxa_conclusao") val taxaConclusao: Double
 )
 
@@ -77,8 +86,9 @@ data class SessaoResumoResponse(
 
 data class SessaoSerieItemRequest(
     @SerializedName("numero_serie") val numeroSerie: Int,
-    @SerializedName("repeticoes_realizadas") val repeticoesRealizadas: Int?,
-    @SerializedName("carga_utilizada") val cargaUtilizada: String?,
+    @SerializedName("repeticoes_realizadas") val repeticoesRealizadas: Int? = null,
+    @SerializedName("carga_utilizada") val cargaUtilizada: String? = null,
+    @SerializedName("tempo_realizado_segundos") val tempoRealizadoSegundos: Int? = null,
     @SerializedName("status") val status: String
 )
 
