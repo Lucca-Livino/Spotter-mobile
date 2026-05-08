@@ -33,14 +33,18 @@ data class TreinoExercicioInfo(
     @SerializedName("id") val id: String,
     @SerializedName("nome") val nome: String,
     @SerializedName("descricao") val descricao: String? = null,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO",
     @SerializedName("musculos") val musculos: List<TreinoExercicioMusculoData> = emptyList(),
     @SerializedName("aparelhos") val aparelhos: List<TreinoExercicioAparelhoData> = emptyList()
-)
+) {
+    val tipo: TipoExercicio get() = TipoExercicio.fromApi(tipoExercicio)
+}
 
 data class TreinoExercicioDetalheData(
     @SerializedName("id") val id: String,
     @SerializedName("series") val series: Int,
-    @SerializedName("repeticoes") val repeticoes: String,
+    @SerializedName("repeticoes") val repeticoes: String? = null,
+    @SerializedName("duracao_sugerida_segundos") val duracaoSugeridaSegundos: Int? = null,
     @SerializedName("carga_sugerida") val cargaSugerida: String? = null,
     @SerializedName("tempo_descanso_segundos") val tempoDescansoSegundos: Int,
     @SerializedName("ordem_execucao") val ordemExecucao: Int,
@@ -100,7 +104,8 @@ data class TreinoDeleteResponse(
 data class TreinoExercicioItemRequest(
     @SerializedName("exercicio_id") val exercicioId: String,
     @SerializedName("series") val series: Int,
-    @SerializedName("repeticoes") val repeticoes: String,
+    @SerializedName("repeticoes") val repeticoes: String? = null,
+    @SerializedName("duracao_sugerida_segundos") val duracaoSugeridaSegundos: Int? = null,
     @SerializedName("carga_sugerida") val cargaSugerida: Double? = null,
     @SerializedName("tempo_descanso_segundos") val tempoDescansoSegundos: Int,
     @SerializedName("ordem_execucao") val ordemExecucao: Int

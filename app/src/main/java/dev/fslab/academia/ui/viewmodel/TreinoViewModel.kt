@@ -259,6 +259,7 @@ class TreinoViewModel : ViewModel() {
                                 put("id", upd.id)
                                 upd.series?.let { put("series", it) }
                                 upd.repeticoes?.let { put("repeticoes", it) }
+                                upd.duracaoSugeridaSegundos?.let { put("duracao_sugerida_segundos", it) }
                                 if (upd.cargaSugeridaExplicitamenteNula) {
                                     put("carga_sugerida", JSONObject.NULL)
                                 } else {
@@ -318,7 +319,8 @@ class TreinoViewModel : ViewModel() {
             arr.put(JSONObject().apply {
                 put("exercicio_id", item.exercicioId)
                 put("series", item.series)
-                put("repeticoes", item.repeticoes)
+                item.repeticoes?.let { put("repeticoes", it) }
+                item.duracaoSugeridaSegundos?.let { put("duracao_sugerida_segundos", it) }
                 item.cargaSugerida?.let { put("carga_sugerida", it) }
                 put("tempo_descanso_segundos", item.tempoDescansoSegundos)
                 put("ordem_execucao", item.ordemExecucao)
@@ -368,6 +370,7 @@ data class TreinoExercicioPatchUpdate(
     val id: String,
     val series: Int? = null,
     val repeticoes: String? = null,
+    val duracaoSugeridaSegundos: Int? = null,
     val cargaSugerida: Double? = null,
     val cargaSugeridaExplicitamenteNula: Boolean = false,
     val tempoDescansoSegundos: Int? = null,
