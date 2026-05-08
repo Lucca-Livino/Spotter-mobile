@@ -35,7 +35,7 @@ class AuthViewModel : ViewModel() {
             _authState.value = AuthState.Loading
             try {
                 val response = RetrofitClient.authApi.getSession()
-                val user = response.user?.toUser()
+                val user = fetchUser(response.user)
                 if (user != null) {
                     _currentUser.value = user
                     _authState.value = AuthState.Success(user)
@@ -62,7 +62,7 @@ class AuthViewModel : ViewModel() {
                     LoginRequest(email = email.trim(), password = password)
                 )
 
-                val user = response.user?.toUser()
+                val user = fetchUser(response.user)
                 if (user != null) {
                     _currentUser.value = user
                     _authState.value = AuthState.Success(user)
@@ -112,5 +112,11 @@ class AuthViewModel : ViewModel() {
                 else -> null
             }
         }.getOrNull()?.takeIf { it.isNotBlank() }
+    }
+
+    private suspend fun fetchUser(fallback: dev.fslab.academia.model.UserData?): User? {
+        val profile = runCatching { RetrofitClient.authApi.getProfile() }.getOrNull()
+        val userData = profile?.data ?: fallback
+        return userData?.toUser()
     }
 }

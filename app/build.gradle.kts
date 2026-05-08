@@ -114,7 +114,11 @@ dependencies {
 
     // Coil - carregamento assíncrono de imagens (avatares, etc.)
     implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation("io.coil-kt:coil-svg:2.5.0")
+    // Coil GIF - decoders animados (GIF, WebP animado, HEIF animado)
+    implementation("io.coil-kt:coil-gif:2.5.0")
+
+    // ExoPlayer (media3) - reprodução de vídeo VP9/WebM, mais robusto que MediaPlayer
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
 
     // Armazenamento seguro de credenciais (AES-256 + Android Keystore)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
