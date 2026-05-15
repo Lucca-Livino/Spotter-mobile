@@ -18,14 +18,14 @@ data class AlunoProfileData(
     @SerializedName("id") val id: String,
     @SerializedName("nome") val nome: String,
     @SerializedName("username") val username: String? = null,
-    @SerializedName("email") val email: String,
-    @SerializedName("data_nascimento") val dataNascimento: String,
+    @SerializedName("email") val email: String? = null,
+    @SerializedName("data_nascimento") val dataNascimento: String? = null,
     @SerializedName("telefone") val telefone: String? = null,
-    @SerializedName("sexo") val sexo: Genero,
+    @SerializedName("sexo") val sexo: Genero? = null,
     @SerializedName("url_foto") val urlFoto: String? = null,
-    @SerializedName("peso_atual") val pesoKg: Double? = null,
-    @SerializedName("altura") val alturaCm: Int? = null,
-    @SerializedName("academia_id") val academiaId: String
+    @SerializedName("peso_atual_kg") val pesoKg: Double? = null,
+    @SerializedName("altura_m") val alturaCm: Double? = null,
+    @SerializedName("academia_id") val academiaId: String? = null
 )
 
 /**
@@ -35,14 +35,14 @@ data class TreinadorProfileData(
     @SerializedName("id") val id: String,
     @SerializedName("nome") val nome: String,
     @SerializedName("username") val username: String? = null,
-    @SerializedName("email") val email: String,
-    @SerializedName("data_nascimento") val dataNascimento: String,
-    @SerializedName("sexo") val sexo: Genero,
+    @SerializedName("email") val email: String? = null,
+    @SerializedName("data_nascimento") val dataNascimento: String? = null,
+    @SerializedName("sexo") val sexo: Genero? = null,
     @SerializedName("url_foto") val urlFoto: String? = null,
-    @SerializedName("cref") val cref: String,
-    @SerializedName("especializacao") val especializacao: String,
-    @SerializedName("graduacao") val graduacao: String,
-    @SerializedName("turnos") val turnos: List<String> = emptyList()
+    @SerializedName("cref") val cref: String? = null,
+    @SerializedName("especializacao") val especializacao: String? = null,
+    @SerializedName("graduacao") val graduacao: String? = null,
+    @SerializedName("turnos") val turnos: List<String>? = emptyList()
 )
 
 /**

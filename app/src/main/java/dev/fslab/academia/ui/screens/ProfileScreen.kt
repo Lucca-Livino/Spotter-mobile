@@ -99,7 +99,7 @@ fun ProfileScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .padding(end = 16.dp)
-                            .clickable { /* Lógica de salvar disparada pelos campos */ }
+                            .clickable { /* Acionado pelo botão principal */ }
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -127,10 +127,30 @@ fun ProfileScreen(
                             id = state.profile.id,
                             nome = updatedData.nome,
                             username = updatedData.username,
-                            dataNascimento = updatedData.dataNascimento,
-                            sexo = updatedData.sexo.valor,
+                            dataNascimento = updatedData.dataNascimento ?: "",
+                            sexo = updatedData.sexo?.valor ?: "P",
                             peso = updatedData.pesoKg,
                             altura = updatedData.alturaCm,
+                            fotoUri = uri,
+                            onSuccess = onBack
+                        )
+                    },
+                    modifier = Modifier.padding(padding)
+                )
+            }
+            is PerfilUiState.SuccessTreinador -> {
+                TreinadorProfileContent(
+                    profile = state.profile,
+                    isUpdating = isUpdating,
+                    onSave = { updatedData, uri ->
+                        viewModel.atualizarTreinador(
+                            context = context,
+                            id = state.profile.id,
+                            nome = updatedData.nome,
+                            username = updatedData.username,
+                            cref = updatedData.cref ?: "",
+                            graduacao = updatedData.graduacao ?: "",
+                            especializacao = updatedData.especializacao ?: "",
                             fotoUri = uri,
                             onSuccess = onBack
                         )
@@ -159,12 +179,12 @@ fun AlunoProfileContent(
     val context = LocalContext.current
 
     var nome by remember { mutableStateOf(profile.nome) }
-    var username by remember { mutableStateOf(profile.username ?: "") }
-    var dataNascimento by remember { mutableStateOf(profile.dataNascimento) }
-    var telefone by remember { mutableStateOf(profile.telefone ?: "") }
-    var peso by remember { mutableStateOf(profile.pesoKg?.toString() ?: "") }
-    var altura by remember { mutableStateOf(profile.alturaCm?.toString() ?: "") }
-    var generoSelected by remember { mutableStateOf(profile.sexo) }
+    var username by remember { mutableStateOf(profile.username.orEmpty()) }
+    var dataNascimento by remember { mutableStateOf(profile.dataNascimento.orEmpty()) }
+    var telefone by remember { mutableStateOf(profile.telefone.orEmpty()) }
+    var peso by remember { mutableStateOf(profile.pesoKg?.toString().orEmpty()) }
+    var altura by remember { mutableStateOf(profile.alturaCm?.toString().orEmpty()) }
+    var generoSelected by remember { mutableStateOf(profile.sexo ?: Genero.PREFIRO_NAO_DIZER) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
     val launcher = rememberLauncherForActivityResult(
@@ -229,19 +249,19 @@ fun AlunoProfileContent(
         // ── Form Fields ──────────────────────────────────────────────
         ProfileField(label = "Nome completo", value = nome, onValueChange = { nome = it })
         ProfileField(label = "Nome de usuário", value = username, onValueChange = { username = it }, prefix = "@")
-        ProfileField(label = "E-mail", value = profile.email, onValueChange = {}, enabled = false, trailingIcon = {
-            Icon(Icons.Filled.Lock, contentDescription = null, size = 18.dp, tint = colors.textSecondary)
+        ProfileField(label = "E-mail", value = profile.email.orEmpty(), onValueChange = {}, enabled = false, trailingIcon = {
+            Icon(Icons.Filled.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.textSecondary)
         })
         
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Box(modifier = Modifier.weight(1f)) {
                 ProfileField(label = "Data de nascimento", value = dataNascimento, onValueChange = { dataNascimento = it }, trailingIcon = {
-                    Icon(Icons.Filled.CalendarMonth, contentDescription = null, size = 18.dp)
+                    Icon(Icons.Filled.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp))
                 })
             }
             Box(modifier = Modifier.weight(1f)) {
                 ProfileField(label = "Telefone", value = telefone, onValueChange = { telefone = it }, trailingIcon = {
-                    Icon(Icons.Filled.Phone, contentDescription = null, size = 18.dp)
+                    Icon(Icons.Filled.Phone, contentDescription = null, modifier = Modifier.size(18.dp))
                 })
             }
         }
@@ -292,7 +312,7 @@ fun AlunoProfileContent(
                     dataNascimento = dataNascimento,
                     sexo = generoSelected,
                     pesoKg = peso.toDoubleOrNull(),
-                    alturaCm = altura.toIntOrNull()
+                    alturaCm = altura.toDoubleOrNull()
                 )
                 onSave(updated, imageUri)
             },
@@ -302,7 +322,11 @@ fun AlunoProfileContent(
             enabled = !isUpdating
         ) {
             if (isUpdating) {
-                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+                CircularProgressIndicator(
+                    color = Color.Black,
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
             } else {
                 Text("SALVAR ALTERAÇÕES", fontWeight = FontWeight.ExtraBold)
             }
@@ -314,6 +338,97 @@ fun AlunoProfileContent(
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(vertical = 32.dp).clickable { /* TODO */ }
         )
+    }
+}
+
+@Composable
+fun TreinadorProfileContent(
+    profile: dev.fslab.academia.model.TreinadorProfileData,
+    isUpdating: Boolean,
+    onSave: (dev.fslab.academia.model.TreinadorProfileData, Uri?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalAcademiaColors.current
+    val context = LocalContext.current
+
+    var nome by remember { mutableStateOf(profile.nome) }
+    var username by remember { mutableStateOf(profile.username.orEmpty()) }
+    var dataNascimento by remember { mutableStateOf(profile.dataNascimento.orEmpty()) }
+    var cref by remember { mutableStateOf(profile.cref.orEmpty()) }
+    var graduacao by remember { mutableStateOf(profile.graduacao.orEmpty()) }
+    var especializacao by remember { mutableStateOf(profile.especializacao.orEmpty()) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? -> imageUri = uri }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Avatar
+        Box(contentAlignment = Alignment.BottomEnd) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(imageUri ?: profile.urlFoto ?: R.drawable.no_profile_photo)
+                    .decoderFactory(SvgDecoder.Factory())
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, colors.primary.copy(alpha = 0.5f), CircleShape)
+            )
+            IconButton(
+                onClick = { launcher.launch("image/*") },
+                modifier = Modifier.size(32.dp).clip(CircleShape).background(colors.primary)
+            ) {
+                Icon(Icons.Filled.CameraAlt, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        ProfileField(label = "Nome completo", value = nome, onValueChange = { nome = it })
+        ProfileField(label = "CREF", value = cref, onValueChange = { cref = it })
+        ProfileField(label = "E-mail", value = profile.email.orEmpty(), onValueChange = {}, enabled = false)
+        ProfileField(label = "Graduação", value = graduacao, onValueChange = { graduacao = it })
+        ProfileField(label = "Especialização", value = especializacao, onValueChange = { especializacao = it })
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = {
+                val updated = profile.copy(
+                    nome = nome,
+                    username = username,
+                    cref = cref,
+                    graduacao = graduacao,
+                    especializacao = especializacao
+                )
+                onSave(updated, imageUri)
+            },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = Color.Black),
+            enabled = !isUpdating
+        ) {
+            if (isUpdating) {
+                CircularProgressIndicator(
+                    color = Color.Black,
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("SALVAR ALTERAÇÕES", fontWeight = FontWeight.ExtraBold)
+            }
+        }
     }
 }
 
@@ -376,14 +491,4 @@ fun GenderButton(
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
         )
     }
-}
-
-@Composable
-private fun Icon(imageVector: androidx.compose.ui.graphics.vector.ImageVector, contentDescription: String?, size: androidx.compose.ui.unit.Dp, tint: Color = Color.Unspecified) {
-    androidx.compose.material3.Icon(
-        imageVector = imageVector,
-        contentDescription = contentDescription,
-        modifier = Modifier.size(size),
-        tint = tint
-    )
 }

@@ -34,21 +34,31 @@ class PerfilViewModel : ViewModel() {
     val isUpdating: StateFlow<Boolean> = _isUpdating.asStateFlow()
 
     /**
-     * Carrega o perfil do usuário logado baseado no seu tipo.
+     * Carrega o perfil do usuário logado baseado na rota unificada /me.
      */
     fun carregarPerfil(tipo: UserTipo) {
         viewModelScope.launch {
             _uiState.value = PerfilUiState.Loading
             try {
+                val response = RetrofitClient.authApi.getProfile()
+                val profileJson = response.data.perfil
+                val gson = com.google.gson.Gson()
+
+                if (profileJson == null || profileJson.isJsonNull) {
+                    _uiState.value = PerfilUiState.Error("Perfil não encontrado no servidor")
+                    return@launch
+                }
+
                 if (tipo == UserTipo.TREINADOR) {
-                    val response = RetrofitClient.profileApi.getTreinadorProfile()
-                    _uiState.value = PerfilUiState.SuccessTreinador(response.data)
+                    val profileData = gson.fromJson(profileJson, TreinadorProfileData::class.java)
+                    _uiState.value = PerfilUiState.SuccessTreinador(profileData)
                 } else {
-                    val response = RetrofitClient.profileApi.getAlunoProfile()
-                    _uiState.value = PerfilUiState.SuccessAluno(response.data)
+                    val profileData = gson.fromJson(profileJson, AlunoProfileData::class.java)
+                    _uiState.value = PerfilUiState.SuccessAluno(profileData)
                 }
             } catch (e: Exception) {
-                _uiState.value = PerfilUiState.Error(e.message ?: "Erro ao carregar perfil")
+                android.util.Log.e("PerfilViewModel", "Erro ao processar JSON: ${e.message}")
+                _uiState.value = PerfilUiState.Error("Falha ao processar dados do perfil")
             }
         }
     }
@@ -64,7 +74,7 @@ class PerfilViewModel : ViewModel() {
         dataNascimento: String,
         sexo: String,
         peso: Double?,
-        altura: Int?,
+        altura: Double?,
         fotoUri: Uri? = null,
         onSuccess: () -> Unit
     ) {
@@ -89,7 +99,48 @@ class PerfilViewModel : ViewModel() {
                     onSuccess()
                 }
             } catch (e: Exception) {
-                // Log de erro ou notificação
+                // Log de erro
+            } finally {
+                _isUpdating.value = false
+            }
+        }
+    }
+
+    /**
+     * Atualiza o perfil do Treinador com suporte a foto opcional.
+     */
+    fun atualizarTreinador(
+        context: Context,
+        id: String,
+        nome: String,
+        username: String?,
+        cref: String,
+        graduacao: String,
+        especializacao: String,
+        fotoUri: Uri? = null,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            _isUpdating.value = true
+            try {
+                val json = JSONObject().apply {
+                    put("nome", nome)
+                    put("username", username)
+                    put("cref", cref)
+                    put("graduacao", graduacao)
+                    put("especializacao", especializacao)
+                }
+
+                val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
+                val fotoPart = fotoUri?.let { FileUtils.createMultipartBody(context, it, "foto") }
+
+                val response = RetrofitClient.profileApi.updateTreinadorProfile(id, requestBody, fotoPart)
+                if (response.success) {
+                    _uiState.value = PerfilUiState.SuccessTreinador(response.data)
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                // Log de erro
             } finally {
                 _isUpdating.value = false
             }
