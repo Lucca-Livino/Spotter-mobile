@@ -111,9 +111,11 @@ fun AcademiaApp(
                         launchSingleTop = true
                     }
                 }
-                AuthState.Idle -> navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Login.route) { inclusive = true }
-                    launchSingleTop = true
+                AuthState.Idle -> {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true } // Limpa absolutamente tudo
+                        launchSingleTop = true
+                    }
                 }
                 else -> Unit
             }
@@ -152,6 +154,7 @@ fun AcademiaApp(
             composable(Screen.Home.route) {
                 HomeScreen(
                     nome = currentUser?.name?.substringBefore(" ").orEmpty(),
+                    fotoUrl = currentUser?.image,
                     isDarkTheme = isDarkTheme,
                     onToggleTheme = { themeViewModel.toggle() },
                     onLogout = { authViewModel.logout() },
@@ -174,6 +177,7 @@ fun AcademiaApp(
             composable(Screen.TreinadorHome.route) {
                 TreinadorHomeScreen(
                     nome = currentUser?.name?.substringBefore(" ").orEmpty(),
+                    fotoUrl = currentUser?.image,
                     onOpenCliente = { _ -> },
                     onOpenClientes = { },
                     onNavigateTab = { _ -> },
@@ -390,7 +394,10 @@ fun AcademiaApp(
             composable(Screen.Perfil.route) {
                 ProfileScreen(
                     userTipo = currentUser?.tipo ?: UserTipo.ALUNO,
-                    onBack = { navController.popBackStackSafely() },
+                    onBack = { 
+                        navController.popBackStackSafely()
+                        authViewModel.checkSession()
+                    },
                     viewModel = perfilViewModel
                 )
             }

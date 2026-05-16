@@ -92,16 +92,6 @@ fun ProfileScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 },
-                actions = {
-                    Text(
-                        text = "Salvar",
-                        color = colors.primary,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .clickable { /* Acionado pelo botão principal */ }
-                    )
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = colors.background,
                     titleContentColor = colors.textPrimary,
@@ -126,9 +116,8 @@ fun ProfileScreen(
                             context = context,
                             id = state.profile.id,
                             nome = updatedData.nome,
-                            username = updatedData.username,
                             dataNascimento = updatedData.dataNascimento ?: "",
-                            sexo = updatedData.sexo?.valor ?: "P",
+                            sexo = updatedData.sexo?.valor ?: "M",
                             peso = updatedData.pesoKg,
                             altura = updatedData.alturaCm,
                             fotoUri = uri,
@@ -147,7 +136,6 @@ fun ProfileScreen(
                             context = context,
                             id = state.profile.id,
                             nome = updatedData.nome,
-                            username = updatedData.username,
                             cref = updatedData.cref ?: "",
                             graduacao = updatedData.graduacao ?: "",
                             especializacao = updatedData.especializacao ?: "",
@@ -179,19 +167,21 @@ fun AlunoProfileContent(
     val context = LocalContext.current
 
     var nome by remember { mutableStateOf(profile.nome) }
-    var username by remember { mutableStateOf(profile.username.orEmpty()) }
     var dataNascimento by remember { mutableStateOf(profile.dataNascimento.orEmpty()) }
     var telefone by remember { mutableStateOf(profile.telefone.orEmpty()) }
     var peso by remember { mutableStateOf(profile.pesoKg?.toString().orEmpty()) }
     var altura by remember { mutableStateOf(profile.alturaCm?.toString().orEmpty()) }
-    var generoSelected by remember { mutableStateOf(profile.sexo ?: Genero.PREFIRO_NAO_DIZER) }
+    var generoSelected by remember { mutableStateOf(profile.sexo ?: Genero.MASCULINO) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Resetar prévia local quando a foto do servidor mudar (sucesso do upload)
+    LaunchedEffect(profile.urlFoto) {
+        imageUri = null
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        imageUri = uri
-    }
+    ) { uri: Uri? -> imageUri = uri }
 
     Column(
         modifier = modifier
@@ -200,55 +190,36 @@ fun AlunoProfileContent(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ── Avatar Section (Figma) ───────────────────────────────────
+        // Avatar
         Box(contentAlignment = Alignment.BottomEnd) {
+            val imageSource = remember(imageUri, profile.urlFoto) {
+                imageUri ?: profile.urlFoto ?: R.drawable.no_profile_photo
+            }
+            
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(imageUri ?: profile.urlFoto ?: R.drawable.no_profile_photo)
+                    .data(imageSource)
                     .decoderFactory(SvgDecoder.Factory())
                     .crossfade(true)
                     .build(),
-                contentDescription = "Foto de perfil",
+                contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
                     .border(2.dp, colors.primary.copy(alpha = 0.5f), CircleShape)
-                    .background(colors.surface)
             )
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(colors.primary)
-                    .clickable { launcher.launch("image/*") }
-                    .border(2.dp, colors.background, CircleShape),
-                contentAlignment = Alignment.Center
+            IconButton(
+                onClick = { launcher.launch("image/*") },
+                modifier = Modifier.size(32.dp).clip(CircleShape).background(colors.primary)
             ) {
-                Icon(
-                    Icons.Filled.CameraAlt,
-                    contentDescription = "Mudar foto",
-                    tint = Color.Black,
-                    modifier = Modifier.size(16.dp)
-                )
+                Icon(Icons.Filled.CameraAlt, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
             }
         }
 
-        Text(
-            text = "Alterar foto",
-            color = colors.primary,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .padding(top = 12.dp)
-                .clickable { launcher.launch("image/*") }
-        )
-
         Spacer(modifier = Modifier.height(32.dp))
 
-        // ── Form Fields ──────────────────────────────────────────────
         ProfileField(label = "Nome completo", value = nome, onValueChange = { nome = it })
-        ProfileField(label = "Nome de usuário", value = username, onValueChange = { username = it }, prefix = "@")
         ProfileField(label = "E-mail", value = profile.email.orEmpty(), onValueChange = {}, enabled = false, trailingIcon = {
             Icon(Icons.Filled.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.textSecondary)
         })
@@ -267,13 +238,7 @@ fun AlunoProfileContent(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "DADOS FÍSICOS",
-            color = colors.primary,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.fillMaxWidth()
-        )
+        Text(text = "DADOS FÍSICOS", color = colors.primary, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -281,26 +246,17 @@ fun AlunoProfileContent(
                 ProfileField(label = "Peso atual (kg)", value = peso, onValueChange = { peso = it })
             }
             Box(modifier = Modifier.weight(1f)) {
-                ProfileField(label = "Altura (cm)", value = altura, onValueChange = { altura = it })
+                ProfileField(label = "Altura (m)", value = altura, onValueChange = { altura = it })
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        
-        // ── Gender Selection ──────────────────────────────────────────
-        Text(
-            text = "Gênero",
-            color = colors.textSecondary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.fillMaxWidth()
-        )
+        Text(text = "Gênero", color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Medium, modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             GenderButton(label = "Masculino", selected = generoSelected == Genero.MASCULINO, onClick = { generoSelected = Genero.MASCULINO }, modifier = Modifier.weight(1f))
             GenderButton(label = "Feminino", selected = generoSelected == Genero.FEMININO, onClick = { generoSelected = Genero.FEMININO }, modifier = Modifier.weight(1f))
         }
-        GenderButton(label = "Prefiro não dizer", selected = generoSelected == Genero.PREFIRO_NAO_DIZER, onClick = { generoSelected = Genero.PREFIRO_NAO_DIZER }, modifier = Modifier.padding(top = 8.dp).fillMaxWidth())
 
         Spacer(modifier = Modifier.height(48.dp))
 
@@ -308,7 +264,6 @@ fun AlunoProfileContent(
             onClick = {
                 val updated = profile.copy(
                     nome = nome,
-                    username = username,
                     dataNascimento = dataNascimento,
                     sexo = generoSelected,
                     pesoKg = peso.toDoubleOrNull(),
@@ -322,22 +277,11 @@ fun AlunoProfileContent(
             enabled = !isUpdating
         ) {
             if (isUpdating) {
-                CircularProgressIndicator(
-                    color = Color.Black,
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
-                )
+                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
                 Text("SALVAR ALTERAÇÕES", fontWeight = FontWeight.ExtraBold)
             }
         }
-
-        Text(
-            text = "Excluir conta",
-            color = Color(0xFFCF6679),
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(vertical = 32.dp).clickable { /* TODO */ }
-        )
     }
 }
 
@@ -352,12 +296,15 @@ fun TreinadorProfileContent(
     val context = LocalContext.current
 
     var nome by remember { mutableStateOf(profile.nome) }
-    var username by remember { mutableStateOf(profile.username.orEmpty()) }
-    var dataNascimento by remember { mutableStateOf(profile.dataNascimento.orEmpty()) }
     var cref by remember { mutableStateOf(profile.cref.orEmpty()) }
     var graduacao by remember { mutableStateOf(profile.graduacao.orEmpty()) }
     var especializacao by remember { mutableStateOf(profile.especializacao.orEmpty()) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Resetar prévia local quando a foto do servidor mudar (sucesso do upload)
+    LaunchedEffect(profile.urlFoto) {
+        imageUri = null
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -372,9 +319,13 @@ fun TreinadorProfileContent(
     ) {
         // Avatar
         Box(contentAlignment = Alignment.BottomEnd) {
+            val imageSource = remember(imageUri, profile.urlFoto) {
+                imageUri ?: profile.urlFoto ?: R.drawable.no_profile_photo
+            }
+            
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(imageUri ?: profile.urlFoto ?: R.drawable.no_profile_photo)
+                    .data(imageSource)
                     .decoderFactory(SvgDecoder.Factory())
                     .crossfade(true)
                     .build(),
@@ -407,7 +358,6 @@ fun TreinadorProfileContent(
             onClick = {
                 val updated = profile.copy(
                     nome = nome,
-                    username = username,
                     cref = cref,
                     graduacao = graduacao,
                     especializacao = especializacao
@@ -420,11 +370,7 @@ fun TreinadorProfileContent(
             enabled = !isUpdating
         ) {
             if (isUpdating) {
-                CircularProgressIndicator(
-                    color = Color.Black,
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
-                )
+                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
                 Text("SALVAR ALTERAÇÕES", fontWeight = FontWeight.ExtraBold)
             }

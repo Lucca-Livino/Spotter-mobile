@@ -7,8 +7,7 @@ import com.google.gson.annotations.SerializedName
  */
 enum class Genero(val valor: String) {
     @SerializedName("M") MASCULINO("M"),
-    @SerializedName("F") FEMININO("F"),
-    @SerializedName("P") PREFIRO_NAO_DIZER("P")
+    @SerializedName("F") FEMININO("F")
 }
 
 /**
@@ -17,7 +16,6 @@ enum class Genero(val valor: String) {
 data class AlunoProfileData(
     @SerializedName("id") val id: String,
     @SerializedName("nome") val nome: String,
-    @SerializedName("username") val username: String? = null,
     @SerializedName("email") val email: String? = null,
     @SerializedName("data_nascimento") val dataNascimento: String? = null,
     @SerializedName("telefone") val telefone: String? = null,
@@ -34,7 +32,6 @@ data class AlunoProfileData(
 data class TreinadorProfileData(
     @SerializedName("id") val id: String,
     @SerializedName("nome") val nome: String,
-    @SerializedName("username") val username: String? = null,
     @SerializedName("email") val email: String? = null,
     @SerializedName("data_nascimento") val dataNascimento: String? = null,
     @SerializedName("sexo") val sexo: Genero? = null,

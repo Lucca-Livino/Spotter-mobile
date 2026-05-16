@@ -69,11 +69,17 @@ fun UserData.toUser(): User {
         "treinador" -> UserTipo.TREINADOR
         else -> UserTipo.ALUNO
     }
+
+    // Tentar extrair a URL da foto do objeto de perfil enriquecido
+    val fotoPerfil = perfil?.get("url_foto")?.let {
+        if (!it.isJsonNull) it.asString else null
+    }
+
     return User(
         id = id,
         name = name,
         email = email,
-        image = image ?: "",
+        image = fotoPerfil ?: image ?: "",
         tipo = userTipo,
         isAdmin = isAdmin ?: false
     )

@@ -70,7 +70,6 @@ class PerfilViewModel : ViewModel() {
         context: Context,
         id: String,
         nome: String,
-        username: String?,
         dataNascimento: String,
         sexo: String,
         peso: Double?,
@@ -83,11 +82,10 @@ class PerfilViewModel : ViewModel() {
             try {
                 val json = JSONObject().apply {
                     put("nome", nome)
-                    put("username", username)
                     put("data_nascimento", dataNascimento)
                     put("sexo", sexo)
-                    put("peso_atual", peso)
-                    put("altura", altura)
+                    put("peso_atual_kg", peso)
+                    put("altura_m", altura)
                 }
 
                 val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
@@ -99,7 +97,7 @@ class PerfilViewModel : ViewModel() {
                     onSuccess()
                 }
             } catch (e: Exception) {
-                // Log de erro
+                android.util.Log.e("PerfilViewModel", "Erro ao atualizar aluno: ${e.message}")
             } finally {
                 _isUpdating.value = false
             }
@@ -113,7 +111,6 @@ class PerfilViewModel : ViewModel() {
         context: Context,
         id: String,
         nome: String,
-        username: String?,
         cref: String,
         graduacao: String,
         especializacao: String,
@@ -125,7 +122,6 @@ class PerfilViewModel : ViewModel() {
             try {
                 val json = JSONObject().apply {
                     put("nome", nome)
-                    put("username", username)
                     put("cref", cref)
                     put("graduacao", graduacao)
                     put("especializacao", especializacao)
@@ -140,7 +136,7 @@ class PerfilViewModel : ViewModel() {
                     onSuccess()
                 }
             } catch (e: Exception) {
-                // Log de erro
+                android.util.Log.e("PerfilViewModel", "Erro ao atualizar treinador: ${e.message}")
             } finally {
                 _isUpdating.value = false
             }
