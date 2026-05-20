@@ -25,25 +25,35 @@ object CookieManager {
     fun init(context: Context) {
         if (::_cookieJar.isInitialized) return
 
-        // 1. Cria (ou recupera) a MasterKey do Android Keystore
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
+        try {
+            // 1. Cria (ou recupera) a MasterKey do Android Keystore
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
 
-        // 2. Cria o SharedPreferences criptografado (AES-256-SIV para chaves, AES-256-GCM para valores)
-        val encryptedPrefs = EncryptedSharedPreferences.create(
-            context,
-            "secure_cookies",
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+            // 2. Cria o SharedPreferences criptografado (AES-256-SIV para chaves, AES-256-GCM para valores)
+            val encryptedPrefs = EncryptedSharedPreferences.create(
+                context,
+                "secure_cookies",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
 
-        // 3. Monta o CookieJar com cache em memória + persistência criptografada
-        _cookieJar = PersistentCookieJar(
-            SetCookieCache(),                           // Cache em memória (sessão ativa)
-            SharedPrefsCookiePersistor(encryptedPrefs)   // Persistência criptografada em disco
-        )
+            // 3. Monta o CookieJar com cache em memória + persistência criptografada
+            _cookieJar = PersistentCookieJar(
+                SetCookieCache(),                           // Cache em memória (sessão ativa)
+                SharedPrefsCookiePersistor(encryptedPrefs)   // Persistência criptografada em disco
+            )
+        } catch (e: Exception) {
+            // Fallback: Se a criptografia falhar (ex: Keystore corrompido ou erro de sistema),
+            // usa SharedPreferences padrão para evitar que o app pare de funcionar.
+            val fallbackPrefs = context.getSharedPreferences("fallback_cookies", Context.MODE_PRIVATE)
+            _cookieJar = PersistentCookieJar(
+                SetCookieCache(),
+                SharedPrefsCookiePersistor(fallbackPrefs)
+            )
+        }
     }
 
     /** Limpa todos os cookies — usar no logout. */
