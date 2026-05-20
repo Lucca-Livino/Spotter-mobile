@@ -67,15 +67,17 @@ fun TreinadorTreinosScreen(
         viewModel.carregar()
     }
 
-    val templates = (uiState as? TreinoListUiState.Success)?.treinos?.filter { it.usuarioId == null } ?: emptyList()
+    val treinos = (uiState as? TreinoListUiState.Success)?.treinos.orEmpty()
+    val templates = treinos.filter { it.usuarioId == null }
+    val treinosClientes = treinos.filter { it.usuarioId != null }
     val isLoading = uiState is TreinoListUiState.Loading || uiState is TreinoListUiState.Idle
 
     Scaffold(
         containerColor = colors.background,
         topBar = {
             AcademiaAppBar(
-                title = "Meus Templates",
-                subtitle = if (templates.isNotEmpty()) "${templates.size} treinos" else null,
+                title = "Treinos",
+                subtitle = if (treinos.isNotEmpty()) "${treinos.size} treinos" else null,
                 showBackButton = false,
                 actions = {
                     IconButton(onClick = { viewModel.carregar() }) {
@@ -134,16 +136,45 @@ fun TreinadorTreinosScreen(
                     item {
                         CardErroTemplate((uiState as TreinoListUiState.Error).message) { viewModel.carregar() }
                     }
-                } else if (templates.isEmpty()) {
-                    item {
-                        CardVazioTemplate()
-                    }
                 } else {
-                    items(templates, key = { it.id }) { treino ->
-                        TemplateCard(
-                            treino = treino,
-                            onClick = { onAbrirDetalhe(treino.id) }
+                    item {
+                        Text(
+                            text = "TEMPLATES",
+                            color = colors.textSecondary,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
                         )
+                    }
+                    if (templates.isEmpty()) {
+                        item { CardVazioTemplate() }
+                    } else {
+                        items(templates, key = { it.id }) { treino ->
+                            TemplateCard(
+                                treino = treino,
+                                onClick = { onAbrirDetalhe(treino.id) }
+                            )
+                        }
+                    }
+
+                    item { Spacer(Modifier.height(8.dp)) }
+
+                    item {
+                        Text(
+                            text = "TREINOS DE CLIENTES",
+                            color = colors.textSecondary,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    if (treinosClientes.isEmpty()) {
+                        item { CardVazioTreinoCliente() }
+                    } else {
+                        items(treinosClientes, key = { it.id }) { treino ->
+                            TreinoClienteCard(
+                                treino = treino,
+                                onClick = { onAbrirDetalhe(treino.id) }
+                            )
+                        }
                     }
                 }
                 
@@ -187,6 +218,56 @@ private fun TemplateCard(treino: TreinoData, onClick: () -> Unit) {
                         }
                     }
                     Spacer(Modifier.height(6.dp))
+                    Text(
+                        treino.nome,
+                        color = colors.textPrimary,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        descricao,
+                        color = colors.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(colors.primary.copy(alpha = 0.18f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.FitnessCenter, null, tint = colors.primary)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TreinoClienteCard(treino: TreinoData, onClick: () -> Unit) {
+    val colors = LocalAcademiaColors.current
+    val descricao = treino.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição"
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = colors.surface,
+            contentColor = colors.textPrimary
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f)) {
                     Text(
                         treino.nome,
                         color = colors.textPrimary,
@@ -266,6 +347,32 @@ private fun CardVazioTemplate() {
             )
             Text(
                 "Crie seu primeiro template tocando no botão 'Novo template'. Templates facilitam a prescrição para seus alunos.",
+                color = colors.textSecondary,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+private fun CardVazioTreinoCliente() {
+    val colors = LocalAcademiaColors.current
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colors.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Nenhum treino de cliente",
+                color = colors.textPrimary,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Crie um treino a partir do perfil do cliente para ele aparecer aqui.",
                 color = colors.textSecondary,
                 style = MaterialTheme.typography.bodyMedium
             )

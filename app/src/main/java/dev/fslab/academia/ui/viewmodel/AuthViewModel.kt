@@ -7,6 +7,7 @@ import dev.fslab.academia.model.User
 import dev.fslab.academia.model.toUser
 import dev.fslab.academia.network.CookieManager
 import dev.fslab.academia.network.RetrofitClient
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -115,7 +116,14 @@ class AuthViewModel : ViewModel() {
     }
 
     private suspend fun fetchUser(fallback: dev.fslab.academia.model.UserData?): User? {
-        val profile = runCatching { RetrofitClient.authApi.getProfile() }.getOrNull()
+        var profile = runCatching { RetrofitClient.authApi.getProfile() }.getOrNull()
+
+        // Se falhou ao buscar perfil (onde tem o tipo do usuário), tenta mais uma vez após um pequeno delay.
+        if (profile == null || profile.data.tipo == null) {
+            delay(500)
+            profile = runCatching { RetrofitClient.authApi.getProfile() }.getOrNull()
+        }
+
         val userData = profile?.data ?: fallback
         return userData?.toUser()
     }

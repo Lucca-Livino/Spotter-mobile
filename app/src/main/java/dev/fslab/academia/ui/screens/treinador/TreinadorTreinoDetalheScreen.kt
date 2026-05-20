@@ -113,12 +113,13 @@ fun TreinadorTreinoDetalheScreen(
     Scaffold(
         containerColor = colors.background,
         topBar = {
+            val sucesso = detalheState as? TreinoDetalheUiState.Success
+            val isTemplate = sucesso?.treino?.usuarioId == null
             AcademiaAppBar(
-                title = "Detalhes do Template",
+                title = if (isTemplate) "Detalhes do Template" else "Detalhes do Treino",
                 showBackButton = true,
                 onBackClick = onBack,
                 actions = {
-                    val sucesso = detalheState as? TreinoDetalheUiState.Success
                     if (sucesso != null) {
                         IconButton(onClick = { onEditar(sucesso.treino.id) }) {
                             Icon(Icons.Filled.Edit, contentDescription = "Editar", tint = colors.textPrimary)
@@ -179,6 +180,7 @@ fun TreinadorTreinoDetalheScreen(
                     val estaDuplicando = duplicarState is TreinoDuplicarUiState.Loading
                     DetalheConteudoTemplate(
                         treino = s.treino,
+                        isTemplate = s.treino.usuarioId == null,
                         carregando = deletarState is TreinoDeletarUiState.Loading || estaDuplicando,
                         onDuplicarClick = { mostrarBottomSheetDuplicar = true }
                     )
@@ -189,13 +191,24 @@ fun TreinadorTreinoDetalheScreen(
 
     if (mostrarDialogoExcluir) {
         val carregando = deletarState is TreinoDeletarUiState.Loading
+        val sucesso = detalheState as? TreinoDetalheUiState.Success
+        val isTemplate = sucesso?.treino?.usuarioId == null
         AlertDialog(
             onDismissRequest = { if (!carregando) mostrarDialogoExcluir = false },
             containerColor = colors.surface,
-            title = { Text("Excluir template?", color = colors.textPrimary) },
+            title = {
+                Text(
+                    if (isTemplate) "Excluir template?" else "Excluir treino?",
+                    color = colors.textPrimary
+                )
+            },
             text = {
                 Text(
-                    "Esta ação não pode ser desfeita e não afetará os treinos já duplicados para clientes.",
+                    if (isTemplate) {
+                        "Esta ação não pode ser desfeita e não afetará os treinos já duplicados para clientes."
+                    } else {
+                        "Esta ação não pode ser desfeita e removerá o treino deste cliente."
+                    },
                     color = colors.textSecondary
                 )
             },
@@ -246,6 +259,7 @@ fun TreinadorTreinoDetalheScreen(
 @Composable
 private fun DetalheConteudoTemplate(
     treino: TreinoData,
+    isTemplate: Boolean,
     carregando: Boolean,
     onDuplicarClick: () -> Unit
 ) {
@@ -290,18 +304,20 @@ private fun DetalheConteudoTemplate(
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.ExtraBold
                             )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .background(colors.primary, RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = "TEMPLATE",
-                                        color = colors.textOnPrimary,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
+                            if (isTemplate) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .background(colors.primary, RoundedCornerShape(4.dp))
+                                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "TEMPLATE",
+                                            color = colors.textOnPrimary,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -364,7 +380,11 @@ private fun DetalheConteudoTemplate(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Edite o template para adicionar exercícios.",
+                            if (isTemplate) {
+                                "Edite o template para adicionar exercícios."
+                            } else {
+                                "Edite o treino para adicionar exercícios."
+                            },
                             color = colors.textSecondary,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -375,7 +395,7 @@ private fun DetalheConteudoTemplate(
 
         item { Spacer(Modifier.height(8.dp)) }
 
-        if (treino.exercicios.isNotEmpty()) {
+        if (isTemplate && treino.exercicios.isNotEmpty()) {
             item {
                 Button(
                     onClick = onDuplicarClick,

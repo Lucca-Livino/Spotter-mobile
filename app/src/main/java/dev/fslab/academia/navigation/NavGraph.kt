@@ -18,7 +18,13 @@ sealed class Screen(val route: String) {
     data object TreinoDetalhe : Screen("treino_detalhe/{id}") {
         fun comId(id: String) = "treino_detalhe/$id"
     }
-    data object TreinoCriar : Screen("treino_criar")
+    data object TreinoCriar : Screen("treino_criar?alunoId={alunoId}") {
+        fun comAlunoId(alunoId: String?) = if (alunoId.isNullOrBlank()) {
+            "treino_criar"
+        } else {
+            "treino_criar?alunoId=$alunoId"
+        }
+    }
     data object TreinoEditar : Screen("treino_editar/{id}") {
         fun comId(id: String) = "treino_editar/$id"
     }
@@ -45,7 +51,9 @@ sealed class Screen(val route: String) {
     // Treinador
     data object TreinadorHome : Screen("treinador_home")
     data object TreinadorAlunos : Screen("treinador_alunos")
-    data object TreinadorAlunoDetalhe : Screen("treinador_aluno_detalhe")
+    data object TreinadorAlunoDetalhe : Screen("treinador_aluno_detalhe/{id}") {
+        fun comId(id: String) = "treinador_aluno_detalhe/$id"
+    }
     data object TreinadorTreinos : Screen("treinador_treinos")
     data object TreinadorTreinoDetalhe : Screen("treinador_treino_detalhe/{id}") {
         fun comId(id: String) = "treinador_treino_detalhe/$id"

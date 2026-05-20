@@ -224,6 +224,7 @@ class TreinoViewModel : ViewModel() {
     fun criar(
         nome: String,
         descricao: String? = null,
+        alunoId: String? = null,
         diasSemana: List<DiaSemana> = emptyList(),
         ordem: Int? = null,
         exercicios: List<TreinoExercicioItemRequest> = emptyList()
@@ -234,6 +235,7 @@ class TreinoViewModel : ViewModel() {
                 val json = JSONObject().apply {
                     put("nome", nome)
                     descricao?.let { put("descricao", it) }
+                    alunoId?.let { put("aluno_id", it) }
                     if (diasSemana.isNotEmpty()) {
                         put("dias_semana", JSONArray(diasSemana.map { it.apiValue }))
                     }

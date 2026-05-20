@@ -98,6 +98,7 @@ private data class ItemForm(
 @Composable
 fun TreinoFormScreen(
     treinoId: String?,
+    alunoId: String? = null,
     onBack: () -> Unit,
     onSalvo: (String) -> Unit,
     onCriarExercicio: () -> Unit = {},
@@ -453,6 +454,7 @@ fun TreinoFormScreen(
                                 viewModel.criar(
                                     nome = nome.trim(),
                                     descricao = descricao.trim().ifBlank { null },
+                                    alunoId = alunoId,
                                     diasSemana = dias.toList(),
                                     ordem = ordemInt,
                                     exercicios = itensRequest

@@ -419,7 +419,7 @@ fun LoginScreen(
                             )
                         } else {
                             Text(
-                                text = "ENTRAR  ->",
+                                text = "ENTRAR",
                                 color = colors.textOnPrimary,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.ExtraBold,

@@ -63,10 +63,17 @@ data class MeResponse(
 )
 
 fun UserData.toUser(): User {
-    val userTipo = when (tipo?.lowercase()) {
+    val tipoNormalizado = tipo?.trim()?.lowercase()
+    
+    val userTipo = when (tipoNormalizado) {
         "treinador" -> UserTipo.TREINADOR
-        else -> UserTipo.ALUNO
+        "aluno" -> UserTipo.ALUNO
+        else -> {
+            // Se tipo for nulo, tenta inferir pelo isAdmin (comum em treinadores)
+            if (isAdmin == true) UserTipo.TREINADOR else UserTipo.ALUNO
+        }
     }
+    
     return User(
         id = id,
         name = name,
