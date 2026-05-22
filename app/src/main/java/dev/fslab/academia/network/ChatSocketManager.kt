@@ -15,9 +15,15 @@ object ChatSocketManager {
     private val _mensagens = MutableSharedFlow<MensagemConversaData>(extraBufferCapacity = 64)
     val mensagens = _mensagens.asSharedFlow()
 
+    private var currentConversaId: String? = null
+
     fun connect(token: String?) {
         if (token.isNullOrBlank()) return
-        if (socket?.connected() == true) return
+        if (socket != null) {
+            if (socket?.connected() == false) socket?.connect()
+            currentConversaId?.let { socket?.emit("conversa:entrar", JSONObject().apply { put("conversaId", it) }) }
+            return
+        }
 
         // Extrai a URL base sem o /api/ (ex: https://dominio.com)
         val baseUrl = RetrofitClient.BASE_URL.substringBefore("/api")
@@ -27,36 +33,42 @@ object ChatSocketManager {
             reconnection = true
             reconnectionAttempts = 5
             reconnectionDelay = 1000
-            // Forçar Transports para evitar problemas de CORS/Proxy se necessário
-            transports = arrayOf("websocket")
         }
 
         socket = IO.socket(baseUrl, options).apply {
             on(Socket.EVENT_CONNECT) {
                 println("Socket conectado com sucesso")
+                currentConversaId?.let { socket?.emit("conversa:entrar", JSONObject().apply { put("conversaId", it) }) }
             }
             on(Socket.EVENT_CONNECT_ERROR) { args ->
                 println("Erro ao conectar socket: ${args.getOrNull(0)}")
             }
             on("mensagem:nova") { args ->
-                val raw = args.firstOrNull() ?: return@on
-                val json = when (raw) {
-                    is JSONObject -> raw.toString()
-                    else -> gson.toJson(raw)
+                try {
+                    val raw = args.firstOrNull() ?: return@on
+                    val json = if (raw is JSONObject) raw.toString() else gson.toJson(raw)
+                    val msg = gson.fromJson(json, MensagemConversaData::class.java)
+                    _mensagens.tryEmit(msg)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-                runCatching { gson.fromJson(json, MensagemConversaData::class.java) }
-                    .onSuccess { _mensagens.tryEmit(it) }
             }
             connect()
         }
     }
 
     fun joinConversa(conversaId: String) {
-        socket?.emit("conversa:entrar", mapOf("conversaId" to conversaId))
+        currentConversaId = conversaId
+        val data = JSONObject()
+        data.put("conversaId", conversaId)
+        socket?.emit("conversa:entrar", data)
     }
 
     fun leaveConversa(conversaId: String) {
-        socket?.emit("conversa:sair", mapOf("conversaId" to conversaId))
+        if (currentConversaId == conversaId) currentConversaId = null
+        val data = JSONObject()
+        data.put("conversaId", conversaId)
+        socket?.emit("conversa:sair", data)
     }
 
     fun disconnect() {
