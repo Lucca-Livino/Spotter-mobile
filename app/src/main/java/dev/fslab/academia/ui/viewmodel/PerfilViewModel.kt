@@ -41,7 +41,13 @@ class PerfilViewModel : ViewModel() {
             _uiState.value = PerfilUiState.Loading
             try {
                 val response = RetrofitClient.authApi.getProfile()
-                val profileJson = response.data.perfil
+                if (response is dev.fslab.academia.model.MeResponse && !response.success) {
+                    _uiState.value = PerfilUiState.Error("Erro: Perfil não encontrado")
+                    return@launch
+                }
+                
+                val profileJson = if (response is dev.fslab.academia.model.MeResponse) response.data.perfil else null
+
                 val gson = com.google.gson.Gson()
 
                 if (profileJson == null || profileJson.isJsonNull) {
@@ -92,7 +98,7 @@ class PerfilViewModel : ViewModel() {
                 val fotoPart = fotoUri?.let { FileUtils.createMultipartBody(context, it, "foto") }
 
                 val response = RetrofitClient.profileApi.updateAlunoProfile(id, requestBody, fotoPart)
-                if (response.success) {
+                if (!response.error) {
                     _uiState.value = PerfilUiState.SuccessAluno(response.data)
                     onSuccess()
                 }
@@ -131,7 +137,7 @@ class PerfilViewModel : ViewModel() {
                 val fotoPart = fotoUri?.let { FileUtils.createMultipartBody(context, it, "foto") }
 
                 val response = RetrofitClient.profileApi.updateTreinadorProfile(id, requestBody, fotoPart)
-                if (response.success) {
+                if (!response.error) {
                     _uiState.value = PerfilUiState.SuccessTreinador(response.data)
                     onSuccess()
                 }

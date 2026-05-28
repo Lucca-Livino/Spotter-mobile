@@ -46,11 +46,13 @@ data class TreinadorProfileData(
  * Respostas da API para perfis.
  */
 data class AlunoProfileResponse(
-    @SerializedName("success") val success: Boolean,
+    @SerializedName("error") val error: Boolean,
+    @SerializedName("message") val message: String? = null,
     @SerializedName("data") val data: AlunoProfileData
 )
 
 data class TreinadorProfileResponse(
-    @SerializedName("success") val success: Boolean,
+    @SerializedName("error") val error: Boolean,
+    @SerializedName("message") val message: String? = null,
     @SerializedName("data") val data: TreinadorProfileData
 )

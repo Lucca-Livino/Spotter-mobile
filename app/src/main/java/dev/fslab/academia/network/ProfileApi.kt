@@ -7,6 +7,7 @@ import okhttp3.RequestBody
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
+import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
 
@@ -16,6 +17,13 @@ interface ProfileApi {
 
     @GET("alunos/me")
     suspend fun getAlunoProfile(): AlunoProfileResponse
+
+    @Multipart
+    @POST("alunos")
+    suspend fun createAlunoProfile(
+        @Part("data") data: String,
+        @Part foto: MultipartBody.Part? = null
+    ): AlunoProfileResponse
 
     @Multipart
     @PATCH("alunos/{id}")
@@ -29,6 +37,13 @@ interface ProfileApi {
 
     @GET("treinadores/me")
     suspend fun getTreinadorProfile(): TreinadorProfileResponse
+
+    @Multipart
+    @POST("treinadores")
+    suspend fun createTreinadorProfile(
+        @Part("data") data: String,
+        @Part foto: MultipartBody.Part? = null
+    ): TreinadorProfileResponse
 
     @Multipart
     @PATCH("treinadores/{id}")

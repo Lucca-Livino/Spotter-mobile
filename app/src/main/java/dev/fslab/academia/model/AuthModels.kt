@@ -45,11 +45,15 @@ data class UserData(
 )
 
 data class LoginResponse(
+    @SerializedName("error") val error: Boolean = false,
+    @SerializedName("message") val message: String? = null,
     @SerializedName("session") val session: SessionData? = null,
     @SerializedName("user") val user: UserData? = null
 )
 
 data class RegisterResponse(
+    @SerializedName("error") val error: Boolean = false,
+    @SerializedName("message") val message: String? = null,
     @SerializedName("session") val session: SessionData? = null,
     @SerializedName("user") val user: UserData? = null
 )

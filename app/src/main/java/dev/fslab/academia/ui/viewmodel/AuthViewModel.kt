@@ -35,7 +35,7 @@ class AuthViewModel : ViewModel() {
             _authState.value = AuthState.Loading
             try {
                 val response = RetrofitClient.authApi.getSession()
-                val user = fetchUser(response.user)
+                val user = response.user?.toUser()
                 if (user != null) {
                     _currentUser.value = user
                     _authState.value = AuthState.Success(user)
@@ -62,7 +62,7 @@ class AuthViewModel : ViewModel() {
                     LoginRequest(email = email.trim(), password = password)
                 )
 
-                val user = fetchUser(response.user)
+                val user = response.user?.toUser()
                 if (user != null) {
                     _currentUser.value = user
                     _authState.value = AuthState.Success(user)
@@ -113,10 +113,18 @@ class AuthViewModel : ViewModel() {
             }
         }.getOrNull()?.takeIf { it.isNotBlank() }
     }
-
     private suspend fun fetchUser(fallback: dev.fslab.academia.model.UserData?): User? {
         val profile = runCatching { RetrofitClient.authApi.getProfile() }.getOrNull()
-        val userData = profile?.data ?: fallback
+        // Assuming getProfile now returns MeResponse (based on Updated upstream's MeResponse addition)
+        // If it still returns UserData, this logic needs adjustment. 
+        // Based on the conflict resolution in AuthModels, we use .success
+        val userData = if (profile != null && profile is dev.fslab.academia.model.MeResponse && profile.success) {
+            profile.data 
+        } else if (profile != null && profile is dev.fslab.academia.model.UserData) {
+            profile
+        } else {
+            fallback
+        }
         return userData?.toUser()
     }
 }
