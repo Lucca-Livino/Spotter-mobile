@@ -21,7 +21,7 @@ interface ProfileApi {
     @Multipart
     @POST("alunos")
     suspend fun createAlunoProfile(
-        @Part("data") data: String,
+        @Part("data") data: okhttp3.RequestBody,
         @Part foto: MultipartBody.Part? = null
     ): AlunoProfileResponse
 
@@ -41,7 +41,7 @@ interface ProfileApi {
     @Multipart
     @POST("treinadores")
     suspend fun createTreinadorProfile(
-        @Part("data") data: String,
+        @Part("data") data: okhttp3.RequestBody,
         @Part foto: MultipartBody.Part? = null
     ): TreinadorProfileResponse
 

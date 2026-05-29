@@ -158,34 +158,29 @@ fun CadastroScreen(
 @Composable
 fun StepConta(viewModel: CadastroViewModel) {
     val colors = LocalAcademiaColors.current
-    var nome by remember { mutableStateOf(viewModel.nome) }
-    var email by remember { mutableStateOf(viewModel.email) }
-    var senha by remember { mutableStateOf(viewModel.senha) }
-    var tipo by remember { mutableStateOf(viewModel.tipo) }
 
     Column(modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState())) {
         Text("Primeiro, os dados da sua conta", color = colors.textSecondary, fontSize = 14.sp)
         Spacer(Modifier.height(24.dp))
 
-        CadastroField("Nome completo", nome, { nome = it }, Icons.Default.Person)
-        CadastroField("E-mail", email, { email = it }, Icons.Default.Email)
-        CadastroField("Senha", senha, { senha = it }, Icons.Default.Lock, isPassword = true)
+        CadastroField("Nome completo", viewModel.nome, { viewModel.nome = it }, Icons.Default.Person)
+        CadastroField("E-mail", viewModel.email, { viewModel.email = it }, Icons.Default.Email, enabled = !viewModel.isSocial)
+        
+        if (!viewModel.isSocial) {
+            CadastroField("Senha", viewModel.senha, { viewModel.senha = it }, Icons.Default.Lock, isPassword = true)
+        }
 
         Spacer(Modifier.height(16.dp))
         Text("Eu sou:", color = colors.textSecondary, fontSize = 12.sp)
         Spacer(Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            UserTypeButton("ALUNO", tipo == UserTipo.ALUNO, { tipo = UserTipo.ALUNO }, Modifier.weight(1f))
-            UserTypeButton("TREINADOR", tipo == UserTipo.TREINADOR, { tipo = UserTipo.TREINADOR }, Modifier.weight(1f))
+            UserTypeButton("ALUNO", viewModel.tipo == UserTipo.ALUNO, { viewModel.tipo = UserTipo.ALUNO }, Modifier.weight(1f))
+            UserTypeButton("TREINADOR", viewModel.tipo == UserTipo.TREINADOR, { viewModel.tipo = UserTipo.TREINADOR }, Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(48.dp))
         Button(
             onClick = {
-                viewModel.nome = nome
-                viewModel.email = email
-                viewModel.senha = senha
-                viewModel.tipo = tipo
                 viewModel.avancarParaPerfil()
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -360,13 +355,21 @@ fun StepPerfil(viewModel: CadastroViewModel, academias: List<AcademiaData>) {
 }
 
 @Composable
-fun CadastroField(label: String, value: String, onValueChange: (String) -> Unit, icon: androidx.compose.ui.graphics.vector.ImageVector?, isPassword: Boolean = false) {
+fun CadastroField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector?,
+    isPassword: Boolean = false,
+    enabled: Boolean = true
+) {
     val colors = LocalAcademiaColors.current
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
         Text(label, color = colors.textSecondary, fontSize = 12.sp, modifier = Modifier.padding(bottom = 4.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
+            enabled = enabled,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,

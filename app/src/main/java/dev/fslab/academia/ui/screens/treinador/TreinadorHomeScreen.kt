@@ -81,6 +81,22 @@ fun TreinadorHomeScreen(
     val colors = LocalAcademiaColors.current
     val context = LocalContext.current
     var navSelected by remember { mutableIntStateOf(0) }
+    
+    // Solicitar permissão de notificações no Android 13+
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ) { /* ignorar resultado */ }
+        
+        LaunchedEffect(Unit) {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            if (androidx.core.content.ContextCompat.checkSelfPermission(context, permission) 
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                launcher.launch(permission)
+            }
+        }
+    }
+    
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(autoLoad) {

@@ -46,7 +46,11 @@ class PerfilViewModel : ViewModel() {
                 val gson = com.google.gson.Gson()
 
                 if (profileJson == null || profileJson.isJsonNull) {
-                    _uiState.value = PerfilUiState.Error("Perfil não encontrado no servidor")
+                    // Em vez de erro, podemos ter um estado específico de "Sem Perfil"
+                    // ou apenas notificar que o carregamento terminou mas não há dados.
+                    // Para evitar o erro na tela, vamos colocar um estado vazio por enquanto
+                    // ou permitir que a Success receba null se o modelo permitir.
+                    _uiState.value = PerfilUiState.Error("Perfil incompleto. Por favor, complete seu cadastro.")
                     return@launch
                 }
 

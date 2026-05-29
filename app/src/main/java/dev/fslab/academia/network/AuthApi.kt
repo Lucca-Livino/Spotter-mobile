@@ -6,9 +6,12 @@ import dev.fslab.academia.model.LoginResponse
 import dev.fslab.academia.model.RegisterRequest
 import dev.fslab.academia.model.RegisterResponse
 import dev.fslab.academia.model.MeResponse
+import dev.fslab.academia.model.SocialLoginRequest
+import dev.fslab.academia.model.FcmTokenRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PATCH
 
 interface AuthApi {
     @POST("auth/sign-in/email")
@@ -17,11 +20,17 @@ interface AuthApi {
     @POST("auth/sign-up/email")
     suspend fun register(@Body request: RegisterRequest): RegisterResponse
 
+    @POST("auth/sign-in/social")
+    suspend fun signInWithSocial(@Body request: SocialLoginRequest): LoginResponse
+
     @GET("auth/get-session")
     suspend fun getSession(): GetSessionResponse
 
     @GET("me")
     suspend fun getProfile(): MeResponse
+
+    @PATCH("me/fcm-token")
+    suspend fun updateFcmToken(@Body request: FcmTokenRequest)
 
     @POST("auth/sign-out")
     suspend fun logout()

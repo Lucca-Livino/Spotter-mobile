@@ -1,9 +1,11 @@
 package dev.fslab.academia
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -24,6 +26,7 @@ import dev.fslab.academia.navigation.Screen
 import dev.fslab.academia.navigation.navigateSafely
 import dev.fslab.academia.navigation.popBackStackSafely
 import dev.fslab.academia.network.CookieManager
+import dev.fslab.academia.network.GoogleSignInHelper
 import dev.fslab.academia.model.UserTipo
 import dev.fslab.academia.ui.screens.HomeScreen
 import dev.fslab.academia.ui.screens.ProfileScreen
@@ -63,6 +66,17 @@ class MainActivity : ComponentActivity() {
     private val exercicioViewModel: ExercicioViewModel by viewModels()
     private val cadastroViewModel: CadastroViewModel by viewModels()
 
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val idToken = GoogleSignInHelper.getIdTokenFromResult(result.data)
+            if (idToken != null) {
+                authViewModel.loginWithGoogle(idToken)
+            }
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +88,11 @@ class MainActivity : ComponentActivity() {
                 themeViewModel = themeViewModel,
                 perfilViewModel = perfilViewModel,
                 exercicioViewModel = exercicioViewModel,
-                cadastroViewModel = cadastroViewModel
+                cadastroViewModel = cadastroViewModel,
+                onGoogleSignIn = {
+                    val intent = GoogleSignInHelper.getSignInIntent(this)
+                    googleSignInLauncher.launch(intent)
+                }
             )
         }
     }
@@ -87,6 +105,7 @@ fun AcademiaApp(
     perfilViewModel: PerfilViewModel,
     exercicioViewModel: ExercicioViewModel,
     cadastroViewModel: CadastroViewModel,
+    onGoogleSignIn: () -> Unit = {},
     sessaoViewModel: SessaoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val themeMode by themeViewModel.themeMode.collectAsState()
@@ -114,22 +133,35 @@ fun AcademiaApp(
         LaunchedEffect(authState) {
             when (val state = authState) {
                 is AuthState.Success -> {
-                    val targetRoute = if (state.user.tipo == UserTipo.TREINADOR) {
-                        Screen.TreinadorHome.route
+                    if (!state.user.hasProfile) {
+                        // Se logou mas não tem perfil (ex: primeiro login social), 
+                        // manda para a tela de completar cadastro pré-preenchido
+                        cadastroViewModel.preencherDadosSociais(state.user.name, state.user.email)
+                        
+                        navController.navigate(Screen.Cadastro.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     } else {
-                        Screen.Home.route
-                    }
-                    navController.navigate(targetRoute) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                        launchSingleTop = true
+                        val targetRoute = if (state.user.tipo == UserTipo.TREINADOR) {
+                            Screen.TreinadorHome.route
+                        } else {
+                            Screen.Home.route
+                        }
+                        navController.navigate(targetRoute) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
+
                 AuthState.Idle -> {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true } // Limpa absolutamente tudo
                         launchSingleTop = true
                     }
                 }
+
                 else -> Unit
             }
         }
@@ -160,7 +192,8 @@ fun AcademiaApp(
                     onRegister = { navController.navigateSafely(Screen.Cadastro.route) },
                     onLogin = { email, password ->
                         authViewModel.loginUser(email = email, password = password)
-                    }
+                    },
+                    onGoogleLogin = onGoogleSignIn
                 )
             }
 
@@ -418,7 +451,7 @@ fun AcademiaApp(
             composable(Screen.Perfil.route) {
                 ProfileScreen(
                     userTipo = currentUser?.tipo ?: UserTipo.ALUNO,
-                    onBack = { 
+                    onBack = {
                         navController.popBackStackSafely()
                         authViewModel.checkSession()
                     },

@@ -11,5 +11,6 @@ data class User(
     val email: String,
     val image: String,
     val tipo: UserTipo = UserTipo.ALUNO,
-    val isAdmin: Boolean = false
+    val isAdmin: Boolean = false,
+    val hasProfile: Boolean = false
 )

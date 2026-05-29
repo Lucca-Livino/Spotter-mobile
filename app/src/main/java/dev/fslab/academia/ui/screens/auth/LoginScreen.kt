@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -33,11 +35,11 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -80,7 +82,8 @@ fun LoginScreen(
     onToggleTheme: () -> Unit = {},
     onEsqueciSenha: (String) -> Unit = {},
     onRegister: () -> Unit = {},
-    onLogin: (String, String) -> Unit = { _, _ -> }
+    onLogin: (String, String) -> Unit = { _, _ -> },
+    onGoogleLogin: () -> Unit = {}
 ) {
     val colors = LocalAcademiaColors.current
 
@@ -357,7 +360,7 @@ fun LoginScreen(
                     )
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(color = Color.Black, size = 24.dp)
+                        CircularProgressIndicatorComponent(color = Color.Black, size = 24.dp)
                     } else {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -376,6 +379,38 @@ fun LoginScreen(
                             )
                         }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "ou",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = onGoogleLogin,
+                    enabled = !isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF4285F4))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF4285F4),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Entrar com Google",
+                        color = Color(0xFF4285F4),
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
 
@@ -415,7 +450,7 @@ fun LoginScreen(
 }
 
 @Composable
-fun CircularProgressIndicator(color: Color, size: androidx.compose.ui.unit.Dp) {
+fun CircularProgressIndicatorComponent(color: Color, size: androidx.compose.ui.unit.Dp) {
     androidx.compose.material3.CircularProgressIndicator(
         modifier = Modifier.size(size),
         color = color,

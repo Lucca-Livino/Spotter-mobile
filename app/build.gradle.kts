@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -61,6 +62,9 @@ dependencies {
     // Core Android + Lifecycle
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     // UI - Jetpack Compose + Material 3
     implementation("androidx.navigation:navigation-compose:2.7.7")

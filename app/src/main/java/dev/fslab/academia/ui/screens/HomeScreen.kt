@@ -45,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -126,6 +127,21 @@ fun HomeScreen(
     val colors = LocalAcademiaColors.current
     val context = LocalContext.current
     var mostrarMaisMenu by remember { mutableStateOf(false) }
+    
+    // Solicitar permissão de notificações no Android 13+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ) { /* ignorar resultado por enquanto */ }
+        
+        LaunchedEffect(Unit) {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            if (androidx.core.content.ContextCompat.checkSelfPermission(context, permission) 
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                launcher.launch(permission)
+            }
+        }
+    }
     
     val diasSemana = remember { generateWeekDays() }
 

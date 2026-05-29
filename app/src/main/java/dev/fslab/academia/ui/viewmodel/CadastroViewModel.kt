@@ -1,5 +1,8 @@
 package dev.fslab.academia.ui.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.fslab.academia.model.AcademiaData
@@ -30,14 +33,23 @@ class CadastroViewModel : ViewModel() {
     private val _academias = MutableStateFlow<List<AcademiaData>>(emptyList())
     val academias: StateFlow<List<AcademiaData>> = _academias.asStateFlow()
 
-    // Dados temporários do passo 1
-    var nome = ""
-    var email = ""
-    var senha = ""
-    var tipo = UserTipo.ALUNO
+    // Dados temporários do passo 1 usando Compose states para sincronização bidirecional
+    var nome by mutableStateOf("")
+    var email by mutableStateOf("")
+    var senha by mutableStateOf("")
+    var tipo by mutableStateOf(UserTipo.ALUNO)
+    var isSocial by mutableStateOf(false)
 
     init {
         carregarAcademias()
+    }
+
+    fun preencherDadosSociais(nomeSocial: String, emailSocial: String) {
+        nome = nomeSocial
+        email = emailSocial
+        isSocial = true
+        // Se for social, pula direto para os dados do perfil
+        _uiState.value = CadastroUiState.DadosPerfil
     }
 
     private fun carregarAcademias() {
@@ -58,7 +70,13 @@ class CadastroViewModel : ViewModel() {
     }
 
     fun avancarParaPerfil() {
-        if (nome.isNotBlank() && email.isNotBlank() && senha.isNotBlank()) {
+        val contaValida = if (isSocial) {
+            nome.isNotBlank() && email.isNotBlank()
+        } else {
+            nome.isNotBlank() && email.isNotBlank() && senha.isNotBlank()
+        }
+
+        if (contaValida) {
             _uiState.value = CadastroUiState.DadosPerfil
         } else {
             _uiState.value = CadastroUiState.Erro("Preencha todos os campos da conta")
@@ -83,39 +101,57 @@ class CadastroViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = CadastroUiState.Carregando
             try {
-                // 1. Criar Conta Auth
-                val regRequest = RegisterRequest(
-                    name = nome,
-                    email = email,
-                    password = senha
-                )
-                val authResponse = RetrofitClient.authApi.register(regRequest)
+                var userIdFinal: String? = null
                 
-                if (authResponse.user == null) {
-                    _uiState.value = CadastroUiState.Erro("Erro ao criar conta")
+                if (!isSocial) {
+                    // 1. Criar Conta Auth
+                    val regRequest = RegisterRequest(
+                        name = nome,
+                        email = email,
+                        password = senha
+                    )
+                    val authResponse = RetrofitClient.authApi.register(regRequest)
+                    
+                    if (authResponse.user == null) {
+                        _uiState.value = CadastroUiState.Erro("Erro ao criar conta")
+                        return@launch
+                    }
+                    userIdFinal = authResponse.user.id
+                } else {
+                    // Se for social, o usuário já está logado no BetterAuth.
+                    // Buscamos o ID dele na sessão atual.
+                    val session = RetrofitClient.authApi.getSession()
+                    userIdFinal = session.user?.id
+                }
+
+                if (userIdFinal == null) {
+                    _uiState.value = CadastroUiState.Erro("Não foi possível identificar seu usuário")
                     return@launch
                 }
 
-                val userId = authResponse.user.id
-
                 // 2. Criar Perfil Aluno
                 val profileJson = JSONObject().apply {
-                    put("user_id", userId)
+                    put("user_id", userIdFinal)
                     put("nome", nome)
                     put("data_nascimento", dataNasc)
                     put("sexo", sexo)
                     put("academia_id", academiaId)
-                    if (peso != null) put("peso_atual_kg", peso)
-                    if (altura != null) put("altura_m", altura)
+                    // Enviar apenas se não for nulo
+                    peso?.let { put("peso_atual_kg", it) }
+                    altura?.let { put("altura_m", it) }
                 }
                 
-                val response = RetrofitClient.profileApi.createAlunoProfile(profileJson.toString())
+                android.util.Log.d("CadastroViewModel", "Enviando perfil: ${profileJson.toString()}")
+                
+                val requestBody = profileJson.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                val response = RetrofitClient.profileApi.createAlunoProfile(requestBody)
                 if (!response.error) {
                     _uiState.value = CadastroUiState.Sucesso
                 } else {
                     _uiState.value = CadastroUiState.Erro(response.message ?: "Erro ao criar perfil")
                 }
             } catch (e: Exception) {
+                android.util.Log.e("CadastroViewModel", "Erro no cadastro: ${e.message}")
                 _uiState.value = CadastroUiState.Erro(e.message ?: "Erro ao realizar cadastro")
             }
         }
@@ -136,21 +172,36 @@ class CadastroViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = CadastroUiState.Carregando
             try {
-                // 1. Criar Conta Auth
-                val regRequest = RegisterRequest(
-                    name = nome,
-                    email = email,
-                    password = senha
-                )
-                val authResponse = RetrofitClient.authApi.register(regRequest)
+                var userIdFinal: String? = null
                 
-                if (authResponse.user == null) {
-                    _uiState.value = CadastroUiState.Erro("Erro ao criar conta")
+                if (!isSocial) {
+                    // 1. Criar Conta Auth
+                    val regRequest = RegisterRequest(
+                        name = nome,
+                        email = email,
+                        password = senha
+                    )
+                    val authResponse = RetrofitClient.authApi.register(regRequest)
+                    
+                    if (authResponse.user == null) {
+                        _uiState.value = CadastroUiState.Erro("Erro ao criar conta")
+                        return@launch
+                    }
+                    userIdFinal = authResponse.user.id
+                } else {
+                    // Se for social, o usuário já está logado
+                    val session = RetrofitClient.authApi.getSession()
+                    userIdFinal = session.user?.id
+                }
+
+                if (userIdFinal == null) {
+                    _uiState.value = CadastroUiState.Erro("Não foi possível identificar seu usuário")
                     return@launch
                 }
 
                 // 2. Criar Perfil Treinador
                 val profileJson = JSONObject().apply {
+                    put("user_id", userIdFinal)
                     put("nome", nome)
                     put("data_nascimento", dataNasc)
                     put("sexo", sexo)
@@ -161,7 +212,10 @@ class CadastroViewModel : ViewModel() {
                     put("turnos", org.json.JSONArray(listOf("MANHA", "TARDE", "NOITE")))
                 }
                 
-                val response = RetrofitClient.profileApi.createTreinadorProfile(profileJson.toString())
+                android.util.Log.d("CadastroViewModel", "Enviando perfil treinador: ${profileJson.toString()}")
+
+                val requestBody = profileJson.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                val response = RetrofitClient.profileApi.createTreinadorProfile(requestBody)
                 if (!response.error) {
                     _uiState.value = CadastroUiState.Sucesso
                 } else {
