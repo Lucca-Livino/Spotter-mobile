@@ -8,6 +8,8 @@ import dev.fslab.academia.model.SessaoResumoData
 import dev.fslab.academia.model.SessaoSerieItemRequest
 import dev.fslab.academia.model.SessaoSeriesUpdateRequest
 import dev.fslab.academia.network.RetrofitClient
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,6 +43,12 @@ class SessaoViewModel : ViewModel() {
     private val _seriesState = MutableStateFlow<SessaoSeriesUiState>(SessaoSeriesUiState.Idle)
     val seriesState: StateFlow<SessaoSeriesUiState> = _seriesState.asStateFlow()
 
+    private val _maxCargaPorExercicio = MutableStateFlow<Map<String, Double?>>(emptyMap())
+    val maxCargaPorExercicio: StateFlow<Map<String, Double?>> = _maxCargaPorExercicio.asStateFlow()
+
+    private val _prsBatidos = MutableStateFlow(0)
+    val prsBatidos: StateFlow<Int> = _prsBatidos.asStateFlow()
+
     fun iniciar(treinoId: String) {
         viewModelScope.launch {
             _uiState.value = SessaoUiState.Loading
@@ -52,6 +60,7 @@ class SessaoViewModel : ViewModel() {
                 val sessao = resposta.body()?.data
                 if (resposta.isSuccessful && sessao != null) {
                     _uiState.value = SessaoUiState.EmAndamento(sessao)
+                    carregarMaxCargaHistorica(sessao.exercicios.map { it.exercicio.id })
                 } else if (resposta.code() == 409) {
                     verificarEmAndamento()
                 } else {
@@ -78,6 +87,7 @@ class SessaoViewModel : ViewModel() {
                 val resposta = RetrofitClient.sessaoApi.getEmAndamento()
                 val sessao = resposta.body()?.data
                 _uiState.value = if (resposta.isSuccessful && sessao != null) {
+                    carregarMaxCargaHistorica(sessao.exercicios.map { it.exercicio.id })
                     SessaoUiState.EmAndamento(sessao)
                 } else {
                     SessaoUiState.SemSessaoAtiva
@@ -173,6 +183,27 @@ class SessaoViewModel : ViewModel() {
     }
 
     fun resetSeries() { _seriesState.value = SessaoSeriesUiState.Idle }
+
+    fun registrarPrsBatidos(count: Int) { _prsBatidos.value = count }
+
+    private fun carregarMaxCargaHistorica(exercicioIds: List<String>) {
+        viewModelScope.launch {
+            val resultados = exercicioIds.map { exercicioId ->
+                async {
+                    try {
+                        val resp = RetrofitClient.historicoApi.getProgressao(exercicioId)
+                        val maxCarga = resp.body()?.data
+                            ?.mapNotNull { it.maiorCarga }
+                            ?.maxOrNull()
+                        exercicioId to maxCarga
+                    } catch (_: Exception) {
+                        exercicioId to null
+                    }
+                }
+            }.awaitAll()
+            _maxCargaPorExercicio.value = resultados.toMap()
+        }
+    }
 
     private fun mapHttpError(code: Int): String = when (code) {
         401 -> "Sessão expirada. Faça login novamente"
