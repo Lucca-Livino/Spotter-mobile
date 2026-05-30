@@ -147,6 +147,7 @@ private fun ExecucaoSessao(
 ) {
     val colors = LocalAcademiaColors.current
     val seriesState by viewModel.seriesState.collectAsState()
+    val maxCargaPorExercicio by viewModel.maxCargaPorExercicio.collectAsState()
 
     val exerciciosOrdenados = remember(sessao.exercicios) {
         sessao.exercicios.sortedBy { it.ordem }
@@ -191,6 +192,7 @@ private fun ExecucaoSessao(
     }
 
     val eTempo = exercicioAtual.exercicio.tipo == TipoExercicio.TEMPO
+    val maxCargaHistorica: Double? = maxCargaPorExercicio[exercicioAtual.exercicio.id]
 
     val defaultReps = exercicioAtual.template.repeticoes?.split("-")?.firstOrNull()?.trim()
         ?.filter { it.isDigit() }?.toIntOrNull() ?: 0
@@ -416,6 +418,12 @@ private fun ExecucaoSessao(
                                     carga = carga.value,
                                     status = status.value,
                                     timerAtivo = timerAtivo.value,
+                                    isPr = run {
+                                        if (status.value != "CONCLUIDA") return@run false
+                                        val cargaDouble = carga.value.trim().toDoubleOrNull() ?: return@run false
+                                        val max = maxCargaHistorica ?: return@run false
+                                        cargaDouble > max
+                                    },
                                     onAlterarMeta = { metaLocal.intValue = it },
                                     onIniciar = {
                                         timerAtivo.value = true
@@ -450,6 +458,12 @@ private fun ExecucaoSessao(
                                     reps = reps.intValue,
                                     carga = carga.value,
                                     status = status.value,
+                                    isPr = run {
+                                        if (status.value != "CONCLUIDA") return@run false
+                                        val cargaDouble = carga.value.trim().toDoubleOrNull() ?: return@run false
+                                        val max = maxCargaHistorica ?: return@run false
+                                        cargaDouble > max
+                                    },
                                     onRepsChange = { reps.intValue = it.coerceAtLeast(0) },
                                     onCargaChange = { carga.value = it },
                                     onMarcarConcluida = {
@@ -754,6 +768,7 @@ private fun SerieStepperRow(
     reps: Int,
     carga: String,
     status: String,
+    isPr: Boolean = false,
     onRepsChange: (Int) -> Unit,
     onCargaChange: (String) -> Unit,
     onMarcarConcluida: () -> Unit,
@@ -835,6 +850,21 @@ private fun SerieStepperRow(
                                 else -> colors.textSecondary
                             }
                         )
+                    }
+                    if (status == "CONCLUIDA" && isPr) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(colors.featureOrange.copy(alpha = 0.18f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                "PR",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = colors.featureOrange
+                            )
+                        }
                     }
                     if (!expandido && status != "PENDENTE") {
                         val info = when (status) {
@@ -1275,6 +1305,7 @@ private fun SerieTempoRow(
     carga: String,
     status: String,
     timerAtivo: Boolean,
+    isPr: Boolean = false,
     onAlterarMeta: (Int) -> Unit,
     onIniciar: () -> Unit,
     onParar: () -> Unit,
@@ -1375,6 +1406,21 @@ private fun SerieTempoRow(
                                 else -> if (timerAtivo) colors.primary else colors.textSecondary
                             }
                         )
+                    }
+                    if (status == "CONCLUIDA" && isPr) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(colors.featureOrange.copy(alpha = 0.18f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                "PR",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = colors.featureOrange
+                            )
+                        }
                     }
                     // Info compacta quando colapsado
                     if (!expandido && status != "PENDENTE") {
