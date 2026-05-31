@@ -61,7 +61,8 @@ data class ExercicioFiltros(
     val musculoIds: Set<String> = emptySet(),
     val aparelhoIds: Set<String> = emptySet(),
     val escopo: EscopoExercicio = EscopoExercicio.TODOS,
-    val emUso: Boolean? = null
+    val emUso: Boolean? = null,
+    val comMidia: Boolean? = null
 )
 
 class ExercicioViewModel : ViewModel() {
@@ -100,6 +101,7 @@ class ExercicioViewModel : ViewModel() {
                     grupoMuscular = f.grupoMuscular?.apiValue,
                     escopo = f.escopo.apiValue,
                     emUso = f.emUso,
+                    comMidia = f.comMidia,
                     incluirMusculos = true,
                     incluirAparelhos = true
                 )

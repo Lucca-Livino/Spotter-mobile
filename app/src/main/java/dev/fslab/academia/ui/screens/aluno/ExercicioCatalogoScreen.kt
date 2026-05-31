@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
@@ -197,6 +198,14 @@ fun ExercicioCatalogoScreen(
                             }
                             viewModel.atualizarFiltros(filtros.copy(emUso = proximo))
                         },
+                        onAlternarComMidia = {
+                            val proximo = when (filtros.comMidia) {
+                                null -> true
+                                true -> false
+                                false -> null
+                            }
+                            viewModel.atualizarFiltros(filtros.copy(comMidia = proximo))
+                        },
                         onLimpar = { viewModel.atualizarFiltros(ExercicioFiltros()) }
                     )
                 }
@@ -292,6 +301,7 @@ private fun BarraFiltros(
     onAbrirAparelhos: () -> Unit,
     onAlternarEscopo: (EscopoExercicio) -> Unit,
     onAlternarEmUso: () -> Unit,
+    onAlternarComMidia: () -> Unit,
     onLimpar: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
@@ -301,7 +311,8 @@ private fun BarraFiltros(
         filtros.aparelhoIds.isNotEmpty() ||
         filtros.busca.isNotBlank() ||
         filtros.escopo != EscopoExercicio.TODOS ||
-        filtros.emUso != null
+        filtros.emUso != null ||
+        filtros.comMidia != null
 
     Row(
         modifier = Modifier.fillMaxWidth().horizontalScroll(scroll),
@@ -367,6 +378,13 @@ private fun BarraFiltros(
             onClick = onAlternarEmUso,
             label = { Text(if (filtros.emUso == false) "Sem treino" else "Em uso") },
             leadingIcon = { Icon(Icons.Filled.Bookmark, null, modifier = Modifier.size(18.dp)) },
+            colors = academiaFilterChipColors()
+        )
+        FilterChip(
+            selected = filtros.comMidia == true,
+            onClick = onAlternarComMidia,
+            label = { Text(if (filtros.comMidia == false) "Sem animação" else "Com animação") },
+            leadingIcon = { Icon(Icons.Filled.PlayCircle, null, modifier = Modifier.size(18.dp)) },
             colors = academiaFilterChipColors()
         )
         if (temFiltros) {

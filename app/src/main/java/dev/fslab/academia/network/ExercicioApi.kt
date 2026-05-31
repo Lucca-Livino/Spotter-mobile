@@ -26,6 +26,7 @@ interface ExercicioApi {
         @Query("treinador_id") treinadorId: String? = null,
         @Query("escopo") escopo: String? = null,
         @Query("em_uso") emUso: Boolean? = null,
+        @Query("com_midia") comMidia: Boolean? = null,
         @Query("ordem_nome") ordemNome: String? = null,
         @Query("incluir_musculos") incluirMusculos: Boolean = true,
         @Query("incluir_aparelhos") incluirAparelhos: Boolean = true
