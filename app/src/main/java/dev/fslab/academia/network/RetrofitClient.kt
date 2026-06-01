@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    const val BASE_URL = "http://192.168.0.143:1350/api/"
+    const val BASE_URL = "http://192.168.0.134:1350/api/"
 
     private val gson = GsonBuilder().setLenient().create()
 

@@ -201,7 +201,12 @@ fun AcademiaApp(
                 CadastroScreen(
                     onBack = { navController.popBackStackSafely() },
                     onSuccess = {
-                        navController.navigateSafely(Screen.Home.route) {
+                        val route = if (cadastroViewModel.tipo == UserTipo.TREINADOR) {
+                            Screen.TreinadorHome.route
+                        } else {
+                            Screen.Home.route
+                        }
+                        navController.navigateSafely(route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },

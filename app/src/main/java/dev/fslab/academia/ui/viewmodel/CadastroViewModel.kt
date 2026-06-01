@@ -48,8 +48,8 @@ class CadastroViewModel : ViewModel() {
         nome = nomeSocial
         email = emailSocial
         isSocial = true
-        // Se for social, pula direto para os dados do perfil
-        _uiState.value = CadastroUiState.DadosPerfil
+        // Removido o salto direto para DadosPerfil para permitir a escolha entre Aluno/Treinador
+        _uiState.value = CadastroUiState.DadosConta
     }
 
     private fun carregarAcademias() {
