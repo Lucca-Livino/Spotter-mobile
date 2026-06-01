@@ -34,4 +34,7 @@ interface AuthApi {
 
     @POST("auth/sign-out")
     suspend fun logout()
+
+    @retrofit2.http.DELETE("me")
+    suspend fun deleteAccount(): retrofit2.Response<Unit>
 }

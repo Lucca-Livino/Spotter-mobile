@@ -23,7 +23,8 @@ data class AlunoProfileData(
     @SerializedName("url_foto") val urlFoto: String? = null,
     @SerializedName("peso_atual_kg") val pesoKg: Double? = null,
     @SerializedName("altura_m") val alturaCm: Double? = null,
-    @SerializedName("academia_id") val academiaId: String? = null
+    @SerializedName("academia_id") val academiaId: String? = null,
+    @SerializedName("academias") val academias: List<AcademiaData>? = emptyList()
 )
 
 /**
@@ -39,7 +40,9 @@ data class TreinadorProfileData(
     @SerializedName("cref") val cref: String? = null,
     @SerializedName("especializacao") val especializacao: String? = null,
     @SerializedName("graduacao") val graduacao: String? = null,
-    @SerializedName("turnos") val turnos: List<String>? = emptyList()
+    @SerializedName("turnos") val turnos: List<String>? = emptyList(),
+    @SerializedName("academia_id") val academiaId: String? = null,
+    @SerializedName("academias") val academias: List<AcademiaData>? = emptyList()
 )
 
 /**

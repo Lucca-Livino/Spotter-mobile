@@ -27,10 +27,13 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -59,7 +63,11 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.icons.filled.Check
 import dev.fslab.academia.R
+import dev.fslab.academia.model.AcademiaData
 import dev.fslab.academia.model.AlunoProfileData
 import dev.fslab.academia.model.Genero
 import dev.fslab.academia.model.UserTipo
@@ -77,6 +85,7 @@ fun ProfileScreen(
     val colors = LocalAcademiaColors.current
     val uiState by viewModel.uiState.collectAsState()
     val isUpdating by viewModel.isUpdating.collectAsState()
+    val allAcademias by viewModel.academias.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -110,8 +119,9 @@ fun ProfileScreen(
             is PerfilUiState.SuccessAluno -> {
                 AlunoProfileContent(
                     profile = state.profile,
+                    allAcademias = allAcademias,
                     isUpdating = isUpdating,
-                    onSave = { updatedData, uri ->
+                    onSave = { updatedData, uri, academiasIds ->
                         viewModel.atualizarAluno(
                             context = context,
                             id = state.profile.id,
@@ -120,9 +130,13 @@ fun ProfileScreen(
                             sexo = updatedData.sexo?.valor ?: "M",
                             peso = updatedData.pesoKg,
                             altura = updatedData.alturaCm,
+                            academiasIds = academiasIds,
                             fotoUri = uri,
                             onSuccess = onBack
                         )
+                    },
+                    onDeleteAccount = {
+                        viewModel.deletarConta(context, onSuccess = onBack)
                     },
                     modifier = Modifier.padding(padding)
                 )
@@ -130,8 +144,9 @@ fun ProfileScreen(
             is PerfilUiState.SuccessTreinador -> {
                 TreinadorProfileContent(
                     profile = state.profile,
+                    allAcademias = allAcademias,
                     isUpdating = isUpdating,
-                    onSave = { updatedData, uri ->
+                    onSave = { updatedData, uri, academiasIds ->
                         viewModel.atualizarTreinador(
                             context = context,
                             id = state.profile.id,
@@ -139,9 +154,13 @@ fun ProfileScreen(
                             cref = updatedData.cref ?: "",
                             graduacao = updatedData.graduacao ?: "",
                             especializacao = updatedData.especializacao ?: "",
+                            academiasIds = academiasIds,
                             fotoUri = uri,
                             onSuccess = onBack
                         )
+                    },
+                    onDeleteAccount = {
+                        viewModel.deletarConta(context, onSuccess = onBack)
                     },
                     modifier = Modifier.padding(padding)
                 )
@@ -159,8 +178,10 @@ fun ProfileScreen(
 @Composable
 fun AlunoProfileContent(
     profile: AlunoProfileData,
+    allAcademias: List<AcademiaData>,
     isUpdating: Boolean,
-    onSave: (AlunoProfileData, Uri?) -> Unit,
+    onSave: (AlunoProfileData, Uri?, List<String>) -> Unit,
+    onDeleteAccount: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAcademiaColors.current
@@ -173,6 +194,13 @@ fun AlunoProfileContent(
     var altura by remember { mutableStateOf(profile.alturaCm?.toString().orEmpty()) }
     var generoSelected by remember { mutableStateOf(profile.sexo ?: Genero.MASCULINO) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // IDs das academias selecionadas
+    var selectedAcademias by remember { 
+        mutableStateOf(profile.academias?.map { it.id }?.toSet() ?: emptySet()) 
+    }
 
     // Resetar prévia local quando a foto do servidor mudar (sucesso do upload)
     LaunchedEffect(profile.urlFoto) {
@@ -258,6 +286,22 @@ fun AlunoProfileContent(
             GenderButton(label = "Feminino", selected = generoSelected == Genero.FEMININO, onClick = { generoSelected = Genero.FEMININO }, modifier = Modifier.weight(1f))
         }
 
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(text = "MINHAS UNIDADES", color = colors.primary, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        MultiSelectAcademias(
+            allAcademias = allAcademias,
+            selectedIds = selectedAcademias,
+            onToggle = { id ->
+                selectedAcademias = if (selectedAcademias.contains(id)) {
+                    selectedAcademias - id
+                } else {
+                    selectedAcademias + id
+                }
+            }
+        )
+
         Spacer(modifier = Modifier.height(48.dp))
 
         Button(
@@ -269,7 +313,7 @@ fun AlunoProfileContent(
                     pesoKg = peso.toDoubleOrNull(),
                     alturaCm = altura.toDoubleOrNull()
                 )
-                onSave(updated, imageUri)
+                onSave(updated, imageUri, selectedAcademias.toList())
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
@@ -282,14 +326,48 @@ fun AlunoProfileContent(
                 Text("SALVAR ALTERAÇÕES", fontWeight = FontWeight.ExtraBold)
             }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        TextButton(
+            onClick = { showDeleteDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isUpdating
+        ) {
+            Text("EXCLUIR MINHA CONTA", color = colors.errorText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Excluir Conta", color = Color.White) },
+            text = { Text("Esta ação é irreversível. Deseja mesmo excluir sua conta e todos os seus dados?", color = colors.textSecondary) },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showDeleteDialog = false
+                    onDeleteAccount()
+                }) {
+                    Text("EXCLUIR", color = colors.errorText, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("CANCELAR", color = Color.White)
+                }
+            },
+            containerColor = Color(0xFF1A1C19)
+        )
     }
 }
 
 @Composable
 fun TreinadorProfileContent(
     profile: dev.fslab.academia.model.TreinadorProfileData,
+    allAcademias: List<AcademiaData>,
     isUpdating: Boolean,
-    onSave: (dev.fslab.academia.model.TreinadorProfileData, Uri?) -> Unit,
+    onSave: (dev.fslab.academia.model.TreinadorProfileData, Uri?, List<String>) -> Unit,
+    onDeleteAccount: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAcademiaColors.current
@@ -300,6 +378,13 @@ fun TreinadorProfileContent(
     var graduacao by remember { mutableStateOf(profile.graduacao.orEmpty()) }
     var especializacao by remember { mutableStateOf(profile.especializacao.orEmpty()) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // IDs das academias selecionadas
+    var selectedAcademias by remember { 
+        mutableStateOf(profile.academias?.map { it.id }?.toSet() ?: emptySet()) 
+    }
 
     // Resetar prévia local quando a foto do servidor mudar (sucesso do upload)
     LaunchedEffect(profile.urlFoto) {
@@ -352,7 +437,23 @@ fun TreinadorProfileContent(
         ProfileField(label = "Graduação", value = graduacao, onValueChange = { graduacao = it })
         ProfileField(label = "Especialização", value = especializacao, onValueChange = { especializacao = it })
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(text = "UNIDADES DE ATENDIMENTO", color = colors.primary, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        MultiSelectAcademias(
+            allAcademias = allAcademias,
+            selectedIds = selectedAcademias,
+            onToggle = { id ->
+                selectedAcademias = if (selectedAcademias.contains(id)) {
+                    selectedAcademias - id
+                } else {
+                    selectedAcademias + id
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
 
         Button(
             onClick = {
@@ -362,7 +463,7 @@ fun TreinadorProfileContent(
                     graduacao = graduacao,
                     especializacao = especializacao
                 )
-                onSave(updated, imageUri)
+                onSave(updated, imageUri, selectedAcademias.toList())
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
@@ -375,6 +476,38 @@ fun TreinadorProfileContent(
                 Text("SALVAR ALTERAÇÕES", fontWeight = FontWeight.ExtraBold)
             }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        TextButton(
+            onClick = { showDeleteDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isUpdating
+        ) {
+            Text("EXCLUIR MINHA CONTA", color = colors.errorText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Excluir Conta", color = Color.White) },
+            text = { Text("Esta ação é irreversível. Deseja mesmo excluir sua conta e todos os seus dados?", color = colors.textSecondary) },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showDeleteDialog = false
+                    onDeleteAccount()
+                }) {
+                    Text("EXCLUIR", color = colors.errorText, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("CANCELAR", color = Color.White)
+                }
+            },
+            containerColor = Color(0xFF1A1C19)
+        )
     }
 }
 
@@ -436,5 +569,48 @@ fun GenderButton(
             fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
         )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun MultiSelectAcademias(
+    allAcademias: List<AcademiaData>,
+    selectedIds: Set<String>,
+    onToggle: (String) -> Unit
+) {
+    val colors = LocalAcademiaColors.current
+
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        allAcademias.forEach { academia ->
+            val isSelected = selectedIds.contains(academia.id)
+            FilterChip(
+                selected = isSelected,
+                onClick = { onToggle(academia.id) },
+                label = { Text(academia.nome, fontSize = 12.sp) },
+                leadingIcon = if (isSelected) {
+                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                } else null,
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color(0xFF1A1C19),
+                    labelColor = colors.textSecondary,
+                    selectedContainerColor = colors.primary,
+                    selectedLabelColor = Color.Black,
+                    selectedLeadingIconColor = Color.Black
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = isSelected,
+                    borderColor = Color(0xFF262626),
+                    selectedBorderColor = colors.primary,
+                    borderWidth = 1.dp
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+        }
     }
 }

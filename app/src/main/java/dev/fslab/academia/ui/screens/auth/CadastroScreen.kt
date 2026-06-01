@@ -322,6 +322,12 @@ fun StepPerfil(viewModel: CadastroViewModel, academias: List<AcademiaData>) {
                 }
             }
         }
+        Text(
+            text = "(Você poderá vincular outras unidades após o cadastro em seu perfil)",
+            color = colors.textSecondary.copy(alpha = 0.7f),
+            fontSize = 11.sp,
+            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+        )
         Spacer(Modifier.height(20.dp))
 
         if (viewModel.tipo == UserTipo.ALUNO) {

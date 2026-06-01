@@ -4,9 +4,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.fslab.academia.model.AcademiaData
 import dev.fslab.academia.model.AlunoProfileData
 import dev.fslab.academia.model.TreinadorProfileData
 import dev.fslab.academia.model.UserTipo
+import dev.fslab.academia.network.GoogleSignInHelper
 import dev.fslab.academia.network.RetrofitClient
 import dev.fslab.academia.ui.util.FileUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ import org.json.JSONObject
 sealed interface PerfilUiState {
     data object Idle : PerfilUiState
     data object Loading : PerfilUiState
+    data object Deletando : PerfilUiState
     data class SuccessAluno(val profile: AlunoProfileData) : PerfilUiState
     data class SuccessTreinador(val profile: TreinadorProfileData) : PerfilUiState
     data class Error(val message: String) : PerfilUiState
@@ -30,8 +33,29 @@ class PerfilViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<PerfilUiState>(PerfilUiState.Idle)
     val uiState: StateFlow<PerfilUiState> = _uiState.asStateFlow()
 
+    private val _academias = MutableStateFlow<List<AcademiaData>>(emptyList())
+    val academias: StateFlow<List<AcademiaData>> = _academias.asStateFlow()
+
     private val _isUpdating = MutableStateFlow(false)
     val isUpdating: StateFlow<Boolean> = _isUpdating.asStateFlow()
+
+    init {
+        carregarTodasAcademias()
+    }
+
+    private fun carregarTodasAcademias() {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.academiaApi.getAcademias()
+                if (!response.error) {
+                    _academias.value = response.data.dados
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PerfilViewModel", "Erro ao carregar academias: ${e.message}")
+            }
+        }
+    }
+
     fun carregarPerfil(tipo: UserTipo) {
         viewModelScope.launch {
             _uiState.value = PerfilUiState.Loading
@@ -46,10 +70,6 @@ class PerfilViewModel : ViewModel() {
                 val gson = com.google.gson.Gson()
 
                 if (profileJson == null || profileJson.isJsonNull) {
-                    // Em vez de erro, podemos ter um estado específico de "Sem Perfil"
-                    // ou apenas notificar que o carregamento terminou mas não há dados.
-                    // Para evitar o erro na tela, vamos colocar um estado vazio por enquanto
-                    // ou permitir que a Success receba null se o modelo permitir.
                     _uiState.value = PerfilUiState.Error("Perfil incompleto. Por favor, complete seu cadastro.")
                     return@launch
                 }
@@ -76,6 +96,7 @@ class PerfilViewModel : ViewModel() {
         sexo: String,
         peso: Double?,
         altura: Double?,
+        academiasIds: List<String>? = null,
         fotoUri: Uri? = null,
         onSuccess: () -> Unit
     ) {
@@ -88,6 +109,9 @@ class PerfilViewModel : ViewModel() {
                     put("sexo", sexo)
                     put("peso_atual_kg", peso)
                     put("altura_m", altura)
+                    academiasIds?.let { 
+                        put("academias_ids", org.json.JSONArray(it))
+                    }
                 }
 
                 val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
@@ -105,6 +129,7 @@ class PerfilViewModel : ViewModel() {
             }
         }
     }
+
     fun atualizarTreinador(
         context: Context,
         id: String,
@@ -112,6 +137,7 @@ class PerfilViewModel : ViewModel() {
         cref: String,
         graduacao: String,
         especializacao: String,
+        academiasIds: List<String>? = null,
         fotoUri: Uri? = null,
         onSuccess: () -> Unit
     ) {
@@ -123,6 +149,9 @@ class PerfilViewModel : ViewModel() {
                     put("cref", cref)
                     put("graduacao", graduacao)
                     put("especializacao", especializacao)
+                    academiasIds?.let { 
+                        put("academias_ids", org.json.JSONArray(it))
+                    }
                 }
 
                 val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
@@ -137,6 +166,29 @@ class PerfilViewModel : ViewModel() {
                 android.util.Log.e("PerfilViewModel", "Erro ao atualizar treinador: ${e.message}")
             } finally {
                 _isUpdating.value = false
+            }
+        }
+    }
+
+    fun deletarConta(context: Context, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = PerfilUiState.Deletando
+            try {
+                // 1. Chamar API de deleção
+                val response = RetrofitClient.authApi.deleteAccount()
+                
+                if (response.isSuccessful) {
+                    // 2. Limpar dados locais (Sessão, Cookies, Google Sign-In)
+                    dev.fslab.academia.network.CookieManager.clearCookies()
+                    dev.fslab.academia.network.SessionStore.clear()
+                    GoogleSignInHelper.signOut(context)
+                    
+                    onSuccess()
+                } else {
+                    _uiState.value = PerfilUiState.Error("Erro ao excluir conta: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                _uiState.value = PerfilUiState.Error("Falha ao excluir conta: ${e.message}")
             }
         }
     }
