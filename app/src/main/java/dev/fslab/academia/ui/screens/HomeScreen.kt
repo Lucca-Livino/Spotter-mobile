@@ -378,20 +378,22 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                // Brilho de fundo
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .padding(4.dp)
-                        .blur(8.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(colors.primary, colors.primary.copy(alpha = 0.2f))
-                            ),
-                            shape = RoundedCornerShape(24.dp)
-                        )
-                        .alpha(0.3f)
-                )
+                // Brilho de fundo (apenas modo escuro)
+                if (colors.isDark) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .padding(4.dp)
+                            .blur(8.dp)
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(colors.primary, colors.primary.copy(alpha = 0.2f))
+                                ),
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                            .alpha(0.3f)
+                    )
+                }
 
                 Column(
                     modifier = Modifier

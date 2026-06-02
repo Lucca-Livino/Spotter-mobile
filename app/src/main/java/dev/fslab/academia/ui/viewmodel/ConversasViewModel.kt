@@ -32,7 +32,8 @@ data class ConversaClienteUi(
     val nome: String,
     val fotoUrl: String? = null,
     val conversaId: String? = null,
-    val ultimaMensagemEm: String? = null
+    val ultimaMensagemEm: String? = null,
+    val mensagensNaoLidas: Int = 0
 )
 
 class ConversasViewModel : ViewModel() {
@@ -122,7 +123,8 @@ class ConversasViewModel : ViewModel() {
                 nome = aluno.nome,
                 fotoUrl = aluno.urlFoto,
                 conversaId = conversa?.id,
-                ultimaMensagemEm = conversa?.ultimaMensagemEm
+                ultimaMensagemEm = conversa?.ultimaMensagemEm,
+                mensagensNaoLidas = conversa?.mensagensNaoLidas ?: 0
             )
         }.sortedBy { it.nome }
     }

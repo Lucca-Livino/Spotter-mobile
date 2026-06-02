@@ -44,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -252,19 +253,12 @@ fun StepPerfil(viewModel: CadastroViewModel, academias: List<AcademiaData>) {
                     value = selectedDateText,
                     onValueChange = {},
                     readOnly = true,
-                    placeholder = { Text("Selecionar data", color = Color(0xFF525252)) },
+                    placeholder = { Text("Selecionar data", color = colors.textSecondary) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = true, 
                     shape = RoundedCornerShape(12.dp),
                     leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color(0xFF262626),
-                        focusedBorderColor = colors.primary.copy(alpha = 0.5f),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        unfocusedContainerColor = Color(0xFF1A1C19),
-                        focusedContainerColor = Color(0xFF1A1C19)
-                    )
+                    colors = outlinedFieldColors()
                 )
                 // Overlay invisível para capturar o clique em toda a área
                 Box(
@@ -303,17 +297,17 @@ fun StepPerfil(viewModel: CadastroViewModel, academias: List<AcademiaData>) {
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.background(Color(0xFF1A1C19)).border(1.dp, Color(0xFF262626))
+                modifier = Modifier.background(colors.surface).border(1.dp, colors.inputBorder)
             ) {
                 if (academias.isEmpty()) {
                     DropdownMenuItem(
-                        text = { Text("Carregando unidades...", color = Color.Gray) },
+                        text = { Text("Carregando unidades...", color = colors.textSecondary) },
                         onClick = { }
                     )
                 }
                 academias.forEach { academia ->
                     DropdownMenuItem(
-                        text = { Text(academia.nome, color = Color.White) },
+                        text = { Text(academia.nome, color = colors.textPrimary) },
                         onClick = {
                             academiaSelecionada = academia
                             expanded = false
@@ -392,8 +386,8 @@ fun UserTypeButton(label: String, selected: Boolean, onClick: () -> Unit, modifi
         modifier = modifier
             .height(48.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(if (selected) colors.primary else Color(0xFF1A1C19))
-            .border(1.dp, if (selected) colors.primary else Color(0xFF262626), RoundedCornerShape(24.dp))
+            .background(if (selected) colors.primary else colors.surface)
+            .border(1.dp, if (selected) colors.primary else colors.inputBorder, RoundedCornerShape(24.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -402,13 +396,21 @@ fun UserTypeButton(label: String, selected: Boolean, onClick: () -> Unit, modifi
 }
 
 @Composable
-fun outlinedFieldColors() = OutlinedTextFieldDefaults.colors(
-    unfocusedContainerColor = Color(0xFF1A1C19),
-    focusedContainerColor = Color(0xFF1A1C19),
-    unfocusedBorderColor = Color(0xFF262626),
-    focusedBorderColor = LocalAcademiaColors.current.primary.copy(alpha = 0.5f),
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    focusedLeadingIconColor = LocalAcademiaColors.current.primary,
-    unfocusedLeadingIconColor = Color(0xFF525252)
-)
+fun outlinedFieldColors(): TextFieldColors {
+    val colors = LocalAcademiaColors.current
+    return OutlinedTextFieldDefaults.colors(
+        unfocusedContainerColor = colors.surface,
+        focusedContainerColor = colors.surface,
+        disabledContainerColor = colors.surface.copy(alpha = 0.5f),
+        unfocusedBorderColor = colors.inputBorder,
+        focusedBorderColor = colors.primary.copy(alpha = 0.5f),
+        disabledBorderColor = colors.inputBorder,
+        focusedTextColor = colors.textPrimary,
+        unfocusedTextColor = colors.textPrimary,
+        disabledTextColor = colors.textPrimary.copy(alpha = 0.5f),
+        focusedLeadingIconColor = colors.primary,
+        unfocusedLeadingIconColor = colors.textSecondary,
+        focusedPlaceholderColor = colors.textSecondary,
+        unfocusedPlaceholderColor = colors.textSecondary
+    )
+}

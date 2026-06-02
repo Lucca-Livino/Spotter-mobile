@@ -84,20 +84,20 @@ val DarkAcademiaTesteColors = AcademiaColors(
 )
 
 /**
- * Cores para tema claro — Adaptado para contraste e acessibilidade
+ * Cores para tema claro — Paleta verde orgânica (#f0f7da / #77ab59)
  */
 val LightAcademiaColors = AcademiaColors(
-    background = PrimaryLightGreen,
-    backgroundGradientStart = PrimaryLightGreen,
-    backgroundGradientEnd = PrimaryLightGreen,
+    background = LightBg,
+    backgroundGradientStart = LightBg,
+    backgroundGradientEnd = LightBg,
     surface = SurfaceWhite,
     textPrimary = TextPrimaryLight,
     textSecondary = TextSecondaryLight,
-    textTertiary = TextSecondaryLight,
-    textOnPrimary = SurfaceWhite,
+    textTertiary = TextTertiaryLight,
+    textOnPrimary = LightTextOnPrimary,
     textInput = TextPrimaryLight,
-    primary = SecondaryDarkGreen, // Usando verde mais escuro para contraste no modo claro
-    primaryDark = PrimaryNeon,
+    primary = LightPrimary,
+    primaryDark = SecondaryDarkGreen,
     iconGray = TextSecondaryLight,
     inputBorder = InputBorderLight,
     mediumGray = LightGray,
@@ -105,10 +105,10 @@ val LightAcademiaColors = AcademiaColors(
     errorText = Color(0xFFB00020),
     errorButton = Color(0xFFB00020),
     error = Color(0xFFB00020),
-    successBackground = Color(0xFFE8F5E9),
-    successText = SecondaryDarkGreen,
-    success = SecondaryDarkGreen,
-    lightGray = LightGray,
+    successBackground = Color(0xFFDCEFCC),
+    successText = Color(0xFF3D7A27),
+    success = LightPrimary,
+    lightGray = SurfaceLight,
     featureBlue = CardBlue,
     featureGreen = CardGreen,
     featureOrange = CardOrange,
@@ -140,14 +140,14 @@ private val DarkColorScheme = darkColorScheme(
  * LightColorScheme - Paleta Material 3
  */
 private val LightColorScheme = lightColorScheme(
-    primary = SecondaryDarkGreen,
-    secondary = PrimaryNeon,
-    tertiary = SecondaryDarkGreen,
-    background = PrimaryLightGreen,
+    primary = LightPrimary,
+    secondary = SecondaryDarkGreen,
+    tertiary = LightPrimary,
+    background = LightBg,
     surface = SurfaceWhite,
-    onPrimary = SurfaceWhite,
-    onSecondary = TextPrimaryLight,
-    onTertiary = TextPrimaryLight,
+    onPrimary = LightTextOnPrimary,
+    onSecondary = SurfaceWhite,
+    onTertiary = LightTextOnPrimary,
     onBackground = TextPrimaryLight,
     onSurface = TextPrimaryLight
 )

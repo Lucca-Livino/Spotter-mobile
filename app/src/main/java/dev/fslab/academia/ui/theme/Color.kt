@@ -53,14 +53,18 @@ val SuccessText = Color(0xFF5DD62C)        // Texto de sucesso (verde neon)
 
 
 // ==========================================
-// TEMA CLARO (LIGHT MODE COMPLEMENTAR)
+// TEMA CLARO (LIGHT MODE — PALETA VERDE ORGÂNICA)
 // ==========================================
-val SurfaceWhite = Color(0xFFFFFFFF)       // Superfície dos Cards (Branco)
-val SurfaceLight = Color(0xFFF1F5F9)       // Superfície secundária (Slate 100)
-val TextPrimaryLight = Color(0xFF0F0F0F)   // Texto primário
-val TextSecondaryLight = Color(0xFF475569) // Texto secundário (Slate 600)
-val InputBorderLight = Color(0xFFCBD5E1)   // Bordas claras (Slate 300)
-val LightGray = Color(0xFFE2E8F0)          // Fundo de inputs claros (Slate 200)
+val LightBg = Color(0xFFFEFDF8)            // Fundo principal (#fefdf8 — creme levíssimo)
+val LightPrimary = Color(0xFF77AB59)       // Verde sage (#77ab59 — brand primário claro)
+val LightTextOnPrimary = Color(0xFF1A2E12) // Texto sobre botões primários (dark forest, 6.5:1)
+val SurfaceWhite = Color(0xFFFFFFFF)       // Superfície dos Cards
+val SurfaceLight = Color(0xFFEBF3D5)       // Input background (verde-cinza suave)
+val TextPrimaryLight = Color(0xFF0F1E0B)   // Texto primário (quase-preto esverdeado)
+val TextSecondaryLight = Color(0xFF4B6B3E) // Texto secundário (verde escuro, 5.2:1 no bg)
+val TextTertiaryLight = Color(0xFF6A8D5E)  // Texto terciário / placeholder
+val InputBorderLight = Color(0xFFC3D9A8)   // Bordas claras (verde-cinza)
+val LightGray = Color(0xFFE4EDCC)          // Dividers e fundos sutis
 
 // ==========================================
 // DASHBOARD ADMIN & FEATURES CARDS (Opcional)

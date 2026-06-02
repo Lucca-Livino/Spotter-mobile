@@ -8,7 +8,8 @@ data class ConversaData(
     @SerializedName("aluno_id") val alunoId: String,
     @SerializedName("ativa") val ativa: Boolean = true,
     @SerializedName("ultima_mensagem_em") val ultimaMensagemEm: String? = null,
-    @SerializedName("created_at") val createdAt: String? = null
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("mensagens_nao_lidas") val mensagensNaoLidas: Int = 0
 )
 
 data class ConversaPaginationData(

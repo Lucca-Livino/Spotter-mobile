@@ -353,10 +353,10 @@ fun AlunoProfileContent(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("CANCELAR", color = Color.White)
+                    Text("CANCELAR", color = colors.textPrimary)
                 }
             },
-            containerColor = Color(0xFF1A1C19)
+            containerColor = colors.surface
         )
     }
 }
@@ -503,10 +503,10 @@ fun TreinadorProfileContent(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("CANCELAR", color = Color.White)
+                    Text("CANCELAR", color = colors.textPrimary)
                 }
             },
-            containerColor = Color(0xFF1A1C19)
+            containerColor = colors.surface
         )
     }
 }
@@ -532,12 +532,12 @@ fun ProfileField(
             prefix = prefix?.let { { Text(it, color = colors.textSecondary) } },
             trailingIcon = trailingIcon,
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFF1A1C19),
-                focusedContainerColor = Color(0xFF1A1C19),
-                disabledContainerColor = Color(0xFF1A1C19).copy(alpha = 0.5f),
-                unfocusedBorderColor = Color(0xFF262626),
+                unfocusedContainerColor = colors.surface,
+                focusedContainerColor = colors.surface,
+                disabledContainerColor = colors.surface.copy(alpha = 0.5f),
+                unfocusedBorderColor = colors.inputBorder,
                 focusedBorderColor = colors.primary.copy(alpha = 0.5f),
-                disabledBorderColor = Color(0xFF262626),
+                disabledBorderColor = colors.inputBorder,
                 focusedTextColor = colors.textPrimary,
                 unfocusedTextColor = colors.textPrimary,
                 disabledTextColor = colors.textPrimary.copy(alpha = 0.5f)
@@ -558,8 +558,8 @@ fun GenderButton(
         modifier = modifier
             .height(48.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(if (selected) colors.primary else Color(0xFF1A1C19))
-            .border(1.dp, if (selected) colors.primary else Color(0xFF262626), RoundedCornerShape(24.dp))
+            .background(if (selected) colors.primary else colors.surface)
+            .border(1.dp, if (selected) colors.primary else colors.inputBorder, RoundedCornerShape(24.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -596,7 +596,7 @@ fun MultiSelectAcademias(
                     { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
                 } else null,
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = Color(0xFF1A1C19),
+                    containerColor = colors.surface,
                     labelColor = colors.textSecondary,
                     selectedContainerColor = colors.primary,
                     selectedLabelColor = Color.Black,
@@ -605,7 +605,7 @@ fun MultiSelectAcademias(
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = isSelected,
-                    borderColor = Color(0xFF262626),
+                    borderColor = colors.inputBorder,
                     selectedBorderColor = colors.primary,
                     borderWidth = 1.dp
                 ),

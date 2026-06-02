@@ -170,18 +170,18 @@ private fun TreinadorChatLista(
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary
             )
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Edit, contentDescription = null, tint = colors.textPrimary)
-            }
         }
 
-        // Subtitle/Filter status (Ref: Lista...png "6 nao lidas")
-        Text(
-            text = "6 não lidas", // Mocked for design
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.primary,
-            fontWeight = FontWeight.Bold
-        )
+        val totalNaoLidas = (listState as? ConversaListUiState.Success)
+            ?.clientes?.sumOf { it.mensagensNaoLidas } ?: 0
+        if (totalNaoLidas > 0) {
+            Text(
+                text = "$totalNaoLidas não lida${if (totalNaoLidas != 1) "s" else ""}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.primary,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -238,7 +238,7 @@ private fun ConversaClienteItem(
     onAbrir: (String) -> Unit
 ) {
     val colors = LocalAcademiaColors.current
-    val hasUnread = true // Mocked for design green text effect
+    val hasUnread = cliente.mensagensNaoLidas > 0
 
     Row(
         modifier = Modifier
@@ -263,18 +263,19 @@ private fun ConversaClienteItem(
                     fontSize = 18.sp
                 )
             }
-            // Unread Badge
-            Surface(
-                modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-2).dp),
-                color = colors.primary,
-                shape = CircleShape
-            ) {
-                Text(
-                    text = "2",
-                    color = colors.textOnPrimary,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
+            if (hasUnread) {
+                Surface(
+                    modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-2).dp),
+                    color = colors.primary,
+                    shape = CircleShape
+                ) {
+                    Text(
+                        text = if (cliente.mensagensNaoLidas > 99) "99+" else cliente.mensagensNaoLidas.toString(),
+                        color = colors.textOnPrimary,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
             }
         }
 
@@ -301,8 +302,7 @@ private fun ConversaClienteItem(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = cliente.ultimaMensagemEm?.let { "Posso fazer na quinta também?" } // Mocked message for aesthetic
-                    ?: "Inicie uma conversa",
+                text = if (cliente.ultimaMensagemEm != null) "Toque para ver a conversa" else "Inicie uma conversa",
                 color = colors.textSecondary,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,

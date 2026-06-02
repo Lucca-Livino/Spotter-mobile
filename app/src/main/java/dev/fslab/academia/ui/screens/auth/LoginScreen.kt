@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RadialGradientShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -99,7 +100,7 @@ fun LoginScreen(
         label = "fadeIn"
     )
 
-    // Background com Gradiente Radial (Figma 40:3)
+    // Background com Gradiente Radial apenas no modo escuro (Figma 40:3)
     val backgroundBrush = remember(colors.isDark) {
         if (colors.isDark) {
             object : ShaderBrush() {
@@ -112,7 +113,7 @@ fun LoginScreen(
                 }
             }
         } else {
-            Brush.verticalGradient(listOf(colors.background, colors.surface))
+            SolidColor(colors.background)
         }
     }
 
@@ -244,12 +245,12 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        placeholder = { Text("seu@email.com", color = Color(0xFF525252)) },
+                        placeholder = { Text("seu@email.com", color = colors.textSecondary) },
                         leadingIcon = {
                             Icon(
                                 Icons.Filled.Email,
                                 contentDescription = null,
-                                tint = if (email.isNotEmpty()) colors.primary else Color(0xFF525252),
+                                tint = if (email.isNotEmpty()) colors.primary else colors.textSecondary,
                                 modifier = Modifier.size(18.dp)
                             )
                         },
@@ -258,9 +259,9 @@ fun LoginScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFF1A1C19),
-                            focusedContainerColor = Color(0xFF1A1C19),
-                            unfocusedBorderColor = Color(0xFF262626),
+                            unfocusedContainerColor = colors.surface,
+                            focusedContainerColor = colors.surface,
+                            unfocusedBorderColor = colors.inputBorder,
                             focusedBorderColor = colors.primary.copy(alpha = 0.5f),
                             focusedTextColor = colors.textPrimary,
                             unfocusedTextColor = colors.textPrimary,
@@ -281,12 +282,12 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = senha,
                         onValueChange = { senha = it },
-                        placeholder = { Text("••••••••", color = Color(0xFF525252)) },
+                        placeholder = { Text("••••••••", color = colors.textSecondary) },
                         leadingIcon = {
                             Icon(
                                 Icons.Filled.Lock,
                                 contentDescription = null,
-                                tint = if (senha.isNotEmpty()) colors.primary else Color(0xFF525252),
+                                tint = if (senha.isNotEmpty()) colors.primary else colors.textSecondary,
                                 modifier = Modifier.size(18.dp)
                             )
                         },
@@ -295,7 +296,7 @@ fun LoginScreen(
                                 Icon(
                                     imageVector = if (senhaVisivel) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                                     contentDescription = null,
-                                    tint = Color(0xFF525252),
+                                    tint = colors.textSecondary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -306,9 +307,9 @@ fun LoginScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFF1A1C19),
-                            focusedContainerColor = Color(0xFF1A1C19),
-                            unfocusedBorderColor = Color(0xFF262626),
+                            unfocusedContainerColor = colors.surface,
+                            focusedContainerColor = colors.surface,
+                            unfocusedBorderColor = colors.inputBorder,
                             focusedBorderColor = colors.primary.copy(alpha = 0.5f),
                             focusedTextColor = colors.textPrimary,
                             unfocusedTextColor = colors.textPrimary,
@@ -372,11 +373,6 @@ fun LoginScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.size(8.dp))
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
                         }
                     }
                 }
