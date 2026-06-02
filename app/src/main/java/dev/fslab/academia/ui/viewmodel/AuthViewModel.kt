@@ -71,7 +71,7 @@ class AuthViewModel : ViewModel() {
                     LoginRequest(email = email.trim(), password = password)
                 )
 
-                SessionStore.setToken(response.session?.token)
+                SessionStore.setToken(response.resolveToken())
 
                 val user = fetchUser(response.user)
                 if (user != null) {
@@ -103,7 +103,7 @@ class AuthViewModel : ViewModel() {
                     )
                 )
 
-                SessionStore.setToken(response.session?.token)
+                SessionStore.setToken(response.resolveToken())
 
                 val user = fetchUser(response.user)
                 if (user != null) {

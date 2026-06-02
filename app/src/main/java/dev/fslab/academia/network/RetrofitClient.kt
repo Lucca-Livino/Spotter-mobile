@@ -26,9 +26,22 @@ object RetrofitClient {
         )
     }
 
+    private val authInterceptor = okhttp3.Interceptor { chain ->
+        val token = SessionStore.getToken()
+        val request = if (token != null) {
+            chain.request().newBuilder()
+                .header("Authorization", "Bearer $token")
+                .build()
+        } else {
+            chain.request()
+        }
+        chain.proceed(request)
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
         .cookieJar(CookieManager.cookieJar)
         .addInterceptor(originInterceptor)
+        .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
         .followRedirects(true)
         .connectTimeout(30, TimeUnit.SECONDS)

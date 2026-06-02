@@ -58,14 +58,20 @@ data class UserData(
 )
 
 data class LoginResponse(
+    @SerializedName("token") val token: String? = null,
     @SerializedName("session") val session: SessionData? = null,
     @SerializedName("user") val user: UserData? = null
-)
+) {
+    fun resolveToken(): String? = token ?: session?.token
+}
 
 data class RegisterResponse(
+    @SerializedName("token") val token: String? = null,
     @SerializedName("session") val session: SessionData? = null,
     @SerializedName("user") val user: UserData? = null
-)
+) {
+    fun resolveToken(): String? = token ?: session?.token
+}
 
 data class GetSessionResponse(
     @SerializedName("session") val session: SessionData? = null,
