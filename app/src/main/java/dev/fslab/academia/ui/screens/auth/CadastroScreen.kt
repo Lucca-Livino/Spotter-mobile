@@ -76,7 +76,7 @@ import dev.fslab.academia.ui.viewmodel.CadastroUiState
 import dev.fslab.academia.ui.viewmodel.CadastroViewModel
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -213,7 +213,7 @@ fun StepPerfil(viewModel: CadastroViewModel, academias: List<AcademiaData>) {
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                        val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
                         selectedDateText = date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                         rawDateValue = date.toString() // YYYY-MM-DD
                     }
