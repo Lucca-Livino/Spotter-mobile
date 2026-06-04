@@ -282,6 +282,135 @@ fun HomeScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // ── Calendário semanal ───────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                val treinoDodia = (homeUiState as? HomeUiState.ComTreino)?.treino
+                diasSemana.forEach { dia ->
+                    val isHoje = dia.hoje
+                    val treinoHoje = if (isHoje) treinoDodia else null
+                    val alturaCell = when {
+                        isHoje && treinoHoje != null -> 148.dp
+                        isHoje -> 88.dp
+                        else -> 80.dp
+                    }
+                    val larguraCell = if (isHoje) 64.dp else 56.dp
+
+                    Box(
+                        modifier = Modifier.size(width = larguraCell, height = alturaCell),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .shadow(
+                                    elevation = if (isHoje) 15.dp else 0.dp,
+                                    shape = RoundedCornerShape(16.dp),
+                                    ambientColor = colors.primary.copy(alpha = 0.3f),
+                                    spotColor = colors.primary.copy(alpha = 0.3f)
+                                )
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isHoje) colors.primary else colors.surface.copy(alpha = 0.5f))
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isHoje) Color.Transparent else colors.surface.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .then(
+                                    if (isHoje && treinoHoje != null)
+                                        Modifier.clickable { onIniciarTreino(treinoHoje.id) }
+                                    else Modifier
+                                )
+                                .padding(vertical = 10.dp, horizontal = 4.dp)
+                        ) {
+                            Text(
+                                text = dia.abrev,
+                                fontSize = 10.sp,
+                                fontWeight = if (isHoje) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isHoje) colors.textOnPrimary.copy(alpha = 0.8f) else colors.textSecondary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${dia.numero}",
+                                fontSize = if (isHoje) 24.sp else 18.sp,
+                                fontWeight = if (isHoje) FontWeight.ExtraBold else FontWeight.Bold,
+                                color = if (isHoje) colors.textOnPrimary else colors.textSecondary
+                            )
+                            if (isHoje) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(colors.textOnPrimary.copy(alpha = 0.5f))
+                                )
+                            }
+                            if (isHoje && treinoHoje != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(1.dp)
+                                        .background(colors.textOnPrimary.copy(alpha = 0.2f))
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = treinoHoje.nome,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colors.textOnPrimary,
+                                    maxLines = 2,
+                                    lineHeight = 12.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(colors.textOnPrimary.copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Filled.PlayArrow,
+                                        contentDescription = "Iniciar treino",
+                                        tint = colors.textOnPrimary,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                            if (isHoje && homeUiState is HomeUiState.Loading) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                CircularProgressIndicator(
+                                    color = colors.textOnPrimary.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (homeUiState is HomeUiState.SemTreino) {
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.material3.Text(
+                    text = "Nenhum treino hoje",
+                    fontSize = 12.sp,
+                    color = colors.textSecondary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // ── Banner sessão em andamento ───────────────────────────
@@ -325,16 +454,6 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
-
-            // ── Card: calendário + treino do dia ─────────────────────
-            CardDataETreino(
-                diasSemana = diasSemana,
-                uiState = homeUiState,
-                colors = colors,
-                onIniciarTreino = onIniciarTreino,
-                onBrowseTreinos = onOpenTreinos,
-                onRetry = { homeViewModel.carregarTreinoDoDia() }
-            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -477,422 +596,6 @@ fun HomeScreen(
             onDismiss = { mostrarMaisMenu = false },
             onNavegar = { route -> onNavigateTab(route) }
         )
-    }
-}
-
-// ─── Card: calendário + treino do dia ────────────────────────────────────────
-
-@Composable
-private fun CardDataETreino(
-    diasSemana: List<DiaSemana>,
-    uiState: HomeUiState,
-    colors: AcademiaColors,
-    onIniciarTreino: (String) -> Unit,
-    onBrowseTreinos: () -> Unit,
-    onRetry: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-    ) {
-        if (colors.isDark) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .padding(4.dp)
-                    .blur(8.dp)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(colors.primary, colors.primary.copy(alpha = 0.2f))
-                        ),
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .alpha(0.3f)
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(colors.surface)
-                .border(1.dp, colors.primary.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
-                .padding(24.dp)
-        ) {
-            // Calendário semanal dentro do card
-            CalendarioSemanalRow(diasSemana = diasSemana, colors = colors)
-
-            Spacer(modifier = Modifier.height(20.dp))
-            HorizontalDivider(color = colors.surface.copy(alpha = 0.15f), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Treino do dia
-            when (uiState) {
-                HomeUiState.Loading, HomeUiState.Idle -> ConteudoCardCarregando(colors)
-                is HomeUiState.ComTreino -> ConteudoCardTreino(
-                    treino = uiState.treino,
-                    colors = colors,
-                    onIniciarTreino = onIniciarTreino
-                )
-                HomeUiState.SemTreino -> ConteudoCardSemTreino(
-                    colors = colors,
-                    onBrowseTreinos = onBrowseTreinos
-                )
-                is HomeUiState.Error -> ConteudoCardErro(
-                    colors = colors,
-                    onRetry = onRetry
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CalendarioSemanalRow(diasSemana: List<DiaSemana>, colors: AcademiaColors) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        diasSemana.forEach { dia ->
-            val isHoje = dia.hoje
-            Box(
-                modifier = Modifier
-                    .size(width = if (isHoje) 46.dp else 40.dp, height = if (isHoje) 72.dp else 64.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .shadow(
-                            elevation = if (isHoje) 12.dp else 0.dp,
-                            shape = RoundedCornerShape(14.dp),
-                            ambientColor = colors.primary.copy(alpha = 0.3f),
-                            spotColor = colors.primary.copy(alpha = 0.3f)
-                        )
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(if (isHoje) colors.primary else colors.background.copy(alpha = 0.6f))
-                        .border(
-                            width = 1.dp,
-                            color = if (isHoje) Color.Transparent else colors.surface.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(14.dp)
-                        )
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text(
-                        text = dia.abrev,
-                        fontSize = 10.sp,
-                        fontWeight = if (isHoje) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isHoje) colors.textOnPrimary.copy(alpha = 0.8f) else colors.textSecondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${dia.numero}",
-                        fontSize = if (isHoje) 20.sp else 16.sp,
-                        fontWeight = if (isHoje) FontWeight.ExtraBold else FontWeight.Bold,
-                        color = if (isHoje) colors.textOnPrimary else colors.textSecondary
-                    )
-                    if (isHoje) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(5.dp)
-                                .clip(CircleShape)
-                                .background(colors.textOnPrimary.copy(alpha = 0.6f))
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ConteudoCardCarregando(colors: AcademiaColors) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(
-            color = colors.primary,
-            modifier = Modifier.size(32.dp),
-            strokeWidth = 3.dp
-        )
-    }
-}
-
-@Composable
-private fun ConteudoCardTreino(
-    treino: TreinoData,
-    colors: AcademiaColors,
-    onIniciarTreino: (String) -> Unit
-) {
-    val palavras = treino.nome.trim().split(" ")
-    val ultimaPalavra = palavras.lastOrNull().orEmpty()
-    val restante = if (palavras.size > 1) palavras.dropLast(1).joinToString(" ") else null
-
-    val diasLabel: String = run {
-        val abrevs = treino.diasSemana?.mapNotNull { DiaSemanaEnum.fromApi(it)?.curto } ?: emptyList()
-        when {
-            abrevs.isEmpty() -> "—"
-            abrevs.size <= 3 -> abrevs.joinToString(" · ")
-            else -> "${abrevs.size}x/sem"
-        }
-    }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(colors.primary.copy(alpha = 0.1f))
-                    .border(1.dp, colors.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = "TREINO DO DIA",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.primary,
-                    letterSpacing = 0.6.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            if (restante != null) {
-                Text(
-                    text = restante,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = colors.textPrimary,
-                    lineHeight = 36.sp
-                )
-            }
-            Text(
-                text = ultimaPalavra,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = colors.primary,
-                lineHeight = 36.sp
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(colors.primary.copy(alpha = 0.1f))
-                .border(1.dp, colors.primary.copy(alpha = 0.2f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Filled.FitnessCenter,
-                contentDescription = null,
-                tint = colors.primary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(colors.surface.copy(alpha = 0.5f))
-                .border(1.dp, colors.inputBorder.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Filled.FitnessCenter,
-                contentDescription = null,
-                tint = colors.textSecondary,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(text = "Exercícios", fontSize = 12.sp, color = colors.textSecondary)
-                Text(
-                    text = treino.totalExercicios?.toString() ?: "—",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(colors.surface.copy(alpha = 0.5f))
-                .border(1.dp, colors.inputBorder.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Filled.LocalFireDepartment,
-                contentDescription = null,
-                tint = colors.textSecondary,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(text = "Frequência", fontSize = 12.sp, color = colors.textSecondary)
-                Text(
-                    text = diasLabel,
-                    fontSize = if (diasLabel.length > 9) 12.sp else 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary,
-                    maxLines = 1
-                )
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(32.dp))
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .shadow(
-                elevation = 15.dp,
-                shape = RoundedCornerShape(12.dp),
-                ambientColor = colors.primary.copy(alpha = 0.3f),
-                spotColor = colors.primary.copy(alpha = 0.3f)
-            )
-            .clip(RoundedCornerShape(12.dp))
-            .background(colors.primary)
-            .clickable { onIniciarTreino(treino.id) },
-        contentAlignment = Alignment.Center
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Filled.PlayArrow,
-                contentDescription = "Iniciar treino",
-                tint = colors.textOnPrimary,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "INICIAR TREINO",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = colors.textOnPrimary
-            )
-        }
-    }
-}
-
-@Composable
-private fun ConteudoCardSemTreino(
-    colors: AcademiaColors,
-    onBrowseTreinos: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(colors.surface.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Filled.FitnessCenter,
-                contentDescription = null,
-                tint = colors.textSecondary,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "Nenhum treino hoje",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = colors.textPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Configure dias da semana nos seus treinos",
-                fontSize = 13.sp,
-                color = colors.textSecondary,
-                textAlign = TextAlign.Center
-            )
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(colors.surface.copy(alpha = 0.3f))
-                .border(1.dp, colors.primary.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                .clickable { onBrowseTreinos() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "VER TREINOS",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = colors.primary,
-                letterSpacing = 0.5.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun ConteudoCardErro(
-    colors: AcademiaColors,
-    onRetry: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            text = "Não foi possível carregar o treino",
-            fontSize = 14.sp,
-            color = colors.textSecondary,
-            textAlign = TextAlign.Center
-        )
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(colors.primary.copy(alpha = 0.1f))
-                .clickable { onRetry() }
-                .padding(horizontal = 20.dp, vertical = 10.dp)
-        ) {
-            Text(
-                text = "Tentar novamente",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.primary
-            )
-        }
     }
 }
 
