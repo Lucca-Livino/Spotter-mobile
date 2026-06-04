@@ -113,8 +113,11 @@ fun SessaoAtivaScreen(
     val prsBatidos by viewModel.prsBatidos.collectAsState()
 
     LaunchedEffect(treinoId) {
-        if (treinoId != null) viewModel.iniciar(treinoId)
-        else viewModel.verificarEmAndamento()
+        when {
+            treinoId != null -> viewModel.iniciar(treinoId)
+            viewModel.uiState.value !is SessaoUiState.EmAndamento -> viewModel.verificarEmAndamento()
+            // estado já é EmAndamento (usuário retomou da home) — não re-fetcha para evitar flash de loading
+        }
     }
 
     when (val state = uiState) {
@@ -169,8 +172,10 @@ private fun ExecucaoSessao(
 
     val exercicioAtual = exerciciosOrdenados.getOrNull(exercicioIndex) ?: return
 
-    // Timer geral
-    var segundosDecorridos by rememberSaveable { mutableIntStateOf(0) }
+    // Timer geral — inicia do tempo real decorrido desde sessao.inicio para funcionar em retomadas
+    var segundosDecorridos by rememberSaveable(sessao.id) {
+        mutableIntStateOf(calcularSegundosDecorridos(sessao.inicio))
+    }
     LaunchedEffect(sessao.id) {
         while (true) { delay(1000L); segundosDecorridos++ }
     }
@@ -1710,6 +1715,17 @@ private fun TimerCirculo(
 }
 
 // ─── Util ─────────────────────────────────────────────────────────────────────
+
+private fun calcularSegundosDecorridos(inicio: String?): Int {
+    if (inicio == null) return 0
+    return try {
+        val elapsed = java.time.Duration.between(
+            java.time.Instant.parse(inicio),
+            java.time.Instant.now()
+        ).seconds.toInt()
+        elapsed.coerceAtLeast(0)
+    } catch (_: Exception) { 0 }
+}
 
 private fun formatarTempoAmigavel(segundos: Int): String {
     if (segundos <= 0) return "0s"

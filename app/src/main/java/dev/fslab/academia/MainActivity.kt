@@ -225,6 +225,12 @@ fun AcademiaApp(
             }
 
             composable(Screen.Home.route) {
+                // Detecta sessão abandonada ao abrir o app — só busca quando estado é Idle
+                LaunchedEffect(Unit) {
+                    if (sessaoViewModel.uiState.value is SessaoUiState.Idle) {
+                        sessaoViewModel.verificarEmAndamento()
+                    }
+                }
 
                 HomeScreen(
                     nome = currentUser?.name?.substringBefore(" ").orEmpty(),
