@@ -56,6 +56,7 @@ import dev.fslab.academia.ui.viewmodel.AuthViewModel
 import dev.fslab.academia.ui.viewmodel.ExercicioViewModel
 import dev.fslab.academia.ui.viewmodel.CadastroViewModel
 import dev.fslab.academia.ui.viewmodel.PerfilViewModel
+import dev.fslab.academia.ui.viewmodel.HomeViewModel
 import dev.fslab.academia.ui.viewmodel.SessaoUiState
 import dev.fslab.academia.ui.viewmodel.SessaoViewModel
 import dev.fslab.academia.ui.viewmodel.ThemeMode
@@ -114,7 +115,8 @@ fun AcademiaApp(
     exercicioViewModel: ExercicioViewModel,
     cadastroViewModel: CadastroViewModel,
     onGoogleSignIn: () -> Unit = {},
-    sessaoViewModel: SessaoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    sessaoViewModel: SessaoViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    homeViewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val themeMode by themeViewModel.themeMode.collectAsState()
     val systemDark = isSystemInDarkTheme()
@@ -242,7 +244,11 @@ fun AcademiaApp(
                     },
                     onNavigateTab = { route ->
                         navController.navigateSafely(route)
-                    }
+                    },
+                    onIniciarTreino = { treinoId ->
+                        navController.navigateSafely(Screen.SessaoAtiva.iniciar(treinoId))
+                    },
+                    homeViewModel = homeViewModel
                 )
             }
 
