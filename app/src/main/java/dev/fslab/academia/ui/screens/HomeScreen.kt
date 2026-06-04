@@ -79,6 +79,15 @@ import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.AcademiaTheme
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.fslab.academia.model.DiaSemana as DiaSemanaEnum
+import dev.fslab.academia.model.TreinoData
+import dev.fslab.academia.ui.theme.AcademiaColors
+import dev.fslab.academia.ui.viewmodel.HomeUiState
+import dev.fslab.academia.ui.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -122,12 +131,20 @@ fun HomeScreen(
     onOpenTreinos: () -> Unit = {},
     onRetomarSessao: () -> Unit = {},
     onNavigateTab: (String) -> Unit = {},
-    temSessaoAtiva: Boolean = false
+    temSessaoAtiva: Boolean = false,
+    onIniciarTreino: (String) -> Unit = {},
+    onAbrirTreinoDoDia: (String) -> Unit = {},
+    homeViewModel: HomeViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
     val context = LocalContext.current
     var mostrarMaisMenu by remember { mutableStateOf(false) }
-    
+    val homeUiState by homeViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        homeViewModel.carregarTreinoDoDia()
+    }
+
     // Solicitar permissão de notificações no Android 13+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -272,13 +289,21 @@ fun HomeScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
+                val treinoDodia = (homeUiState as? HomeUiState.ComTreino)?.treino
                 diasSemana.forEach { dia ->
                     val isHoje = dia.hoje
+                    val treinoHoje = if (isHoje) treinoDodia else null
+                    val alturaCell = when {
+                        isHoje && treinoHoje != null -> 124.dp
+                        isHoje -> 88.dp
+                        else -> 80.dp
+                    }
+                    val larguraCell = if (isHoje) 64.dp else 56.dp
+
                     Box(
-                        modifier = Modifier
-                            .size(width = if (isHoje) 62.dp else 56.dp, height = if (isHoje) 88.dp else 80.dp),
+                        modifier = Modifier.size(width = larguraCell, height = alturaCell),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -299,20 +324,25 @@ fun HomeScreen(
                                     color = if (isHoje) Color.Transparent else colors.surface.copy(alpha = 0.1f),
                                     shape = RoundedCornerShape(16.dp)
                                 )
-                                .padding(vertical = 12.dp)
+                                .then(
+                                    if (isHoje && treinoHoje != null)
+                                        Modifier.clickable { onAbrirTreinoDoDia(treinoHoje.id) }
+                                    else Modifier
+                                )
+                                .padding(vertical = 10.dp, horizontal = 4.dp)
                         ) {
                             Text(
                                 text = dia.abrev,
-                                fontSize = 12.sp,
+                                fontSize = 10.sp,
                                 fontWeight = if (isHoje) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isHoje) Color(0xFF0F0F0F).copy(alpha = 0.8f) else colors.textSecondary
+                                color = if (isHoje) colors.textOnPrimary.copy(alpha = 0.8f) else colors.textSecondary
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "${dia.numero}",
                                 fontSize = if (isHoje) 24.sp else 18.sp,
                                 fontWeight = if (isHoje) FontWeight.ExtraBold else FontWeight.Bold,
-                                color = if (isHoje) Color(0xFF0F0F0F) else colors.textSecondary
+                                color = if (isHoje) colors.textOnPrimary else colors.textSecondary
                             )
                             if (isHoje) {
                                 Spacer(modifier = Modifier.height(6.dp))
@@ -320,7 +350,24 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .size(6.dp)
                                         .clip(CircleShape)
-                                        .background(Color.Black)
+                                        .background(colors.textOnPrimary.copy(alpha = 0.5f))
+                                )
+                            }
+                            if (isHoje && treinoHoje != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Icon(
+                                    Icons.Filled.FitnessCenter,
+                                    contentDescription = "Treino hoje",
+                                    tint = colors.textOnPrimary.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            if (isHoje && homeUiState is HomeUiState.Loading) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                CircularProgressIndicator(
+                                    color = colors.textOnPrimary.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
                                 )
                             }
                         }
@@ -328,7 +375,18 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            if (homeUiState is HomeUiState.SemTreino) {
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.material3.Text(
+                    text = "Nenhum treino hoje",
+                    fontSize = 12.sp,
+                    color = colors.textSecondary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // ── Banner sessão em andamento ───────────────────────────
             if (temSessaoAtiva) {
@@ -370,208 +428,6 @@ fun HomeScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // ── Card do treino ───────────────────────────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                // Brilho de fundo (apenas modo escuro)
-                if (colors.isDark) {
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .padding(4.dp)
-                            .blur(8.dp)
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(colors.primary, colors.primary.copy(alpha = 0.2f))
-                                ),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                            .alpha(0.3f)
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(colors.surface)
-                        .border(1.dp, colors.primary.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
-                        .padding(24.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Column {
-                            // Badge "TREINO B"
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(colors.primary.copy(alpha = 0.1f))
-                                    .border(1.dp, colors.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = "TREINO B",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.primary,
-                                    letterSpacing = 0.6.sp
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "Peito e",
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = colors.textPrimary,
-                                lineHeight = 36.sp
-                            )
-                            Text(
-                                text = "Tríceps",
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = colors.primary,
-                                lineHeight = 36.sp
-                            )
-                        }
-
-                        // Ícone superior direito
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(colors.primary.copy(alpha = 0.1f))
-                                .border(1.dp, colors.primary.copy(alpha = 0.2f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Filled.FitnessCenter,
-                                contentDescription = null,
-                                tint = colors.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Duração & Intensidade
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Duração
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(colors.surface.copy(alpha = 0.5f))
-                                .border(1.dp, colors.inputBorder.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Filled.Timer,
-                                contentDescription = null,
-                                tint = colors.textSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(text = "Duração", fontSize = 12.sp, color = colors.textSecondary)
-                                Text(text = "60 min", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
-                            }
-                        }
-
-                        // Intensidade
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(colors.surface.copy(alpha = 0.5f))
-                                .border(1.dp, colors.inputBorder.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Filled.LocalFireDepartment,
-                                contentDescription = null,
-                                tint = colors.textSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(text = "Intensidade", fontSize = 12.sp, color = colors.textSecondary)
-                                Text(text = "Alta", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Progresso Semanal
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "Progresso Semanal", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = colors.textSecondary)
-                        Text(text = "2/5 Concluídos", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = colors.primary)
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { 2f / 5f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(50)),
-                        color = colors.primary,
-                        trackColor = colors.surface.copy(alpha = 0.5f),
-                        strokeCap = StrokeCap.Round
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Botão Iniciar Treino
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .shadow(
-                                elevation = 15.dp,
-                                shape = RoundedCornerShape(12.dp),
-                                ambientColor = colors.primary.copy(alpha = 0.3f),
-                                spotColor = colors.primary.copy(alpha = 0.3f)
-                            )
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(colors.primary)
-                            .clickable { },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Filled.PlayArrow,
-                                contentDescription = null,
-                                tint = Color(0xFF0F0F0F),
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "INICIAR TREINO",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFF0F0F0F)
-                            )
-                        }
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -717,6 +573,8 @@ fun HomeScreen(
         )
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true, name = "Dark Theme")
