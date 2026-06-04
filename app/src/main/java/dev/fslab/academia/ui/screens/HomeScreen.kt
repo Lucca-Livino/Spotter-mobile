@@ -282,69 +282,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // ── Calendário semanal ───────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                diasSemana.forEach { dia ->
-                    val isHoje = dia.hoje
-                    Box(
-                        modifier = Modifier
-                            .size(width = if (isHoje) 62.dp else 56.dp, height = if (isHoje) 88.dp else 80.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .shadow(
-                                    elevation = if (isHoje) 15.dp else 0.dp,
-                                    shape = RoundedCornerShape(16.dp),
-                                    ambientColor = colors.primary.copy(alpha = 0.3f),
-                                    spotColor = colors.primary.copy(alpha = 0.3f)
-                                )
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(if (isHoje) colors.primary else colors.surface.copy(alpha = 0.5f))
-                                .border(
-                                    width = 1.dp,
-                                    color = if (isHoje) Color.Transparent else colors.surface.copy(alpha = 0.1f),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                                .padding(vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = dia.abrev,
-                                fontSize = 12.sp,
-                                fontWeight = if (isHoje) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isHoje) Color(0xFF0F0F0F).copy(alpha = 0.8f) else colors.textSecondary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "${dia.numero}",
-                                fontSize = if (isHoje) 24.sp else 18.sp,
-                                fontWeight = if (isHoje) FontWeight.ExtraBold else FontWeight.Bold,
-                                color = if (isHoje) Color(0xFF0F0F0F) else colors.textSecondary
-                            )
-                            if (isHoje) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.Black)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // ── Banner sessão em andamento ───────────────────────────
             if (temSessaoAtiva) {
@@ -388,8 +326,9 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // ── Treino do dia ────────────────────────────────────────
-            CardTreinoDoDia(
+            // ── Card: calendário + treino do dia ─────────────────────
+            CardDataETreino(
+                diasSemana = diasSemana,
                 uiState = homeUiState,
                 colors = colors,
                 onIniciarTreino = onIniciarTreino,
@@ -541,10 +480,11 @@ fun HomeScreen(
     }
 }
 
-// ─── Card do treino do dia ────────────────────────────────────────────────────
+// ─── Card: calendário + treino do dia ────────────────────────────────────────
 
 @Composable
-private fun CardTreinoDoDia(
+private fun CardDataETreino(
+    diasSemana: List<DiaSemana>,
     uiState: HomeUiState,
     colors: AcademiaColors,
     onIniciarTreino: (String) -> Unit,
@@ -580,6 +520,14 @@ private fun CardTreinoDoDia(
                 .border(1.dp, colors.primary.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
                 .padding(24.dp)
         ) {
+            // Calendário semanal dentro do card
+            CalendarioSemanalRow(diasSemana = diasSemana, colors = colors)
+
+            Spacer(modifier = Modifier.height(20.dp))
+            HorizontalDivider(color = colors.surface.copy(alpha = 0.15f), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Treino do dia
             when (uiState) {
                 HomeUiState.Loading, HomeUiState.Idle -> ConteudoCardCarregando(colors)
                 is HomeUiState.ComTreino -> ConteudoCardTreino(
@@ -595,6 +543,68 @@ private fun CardTreinoDoDia(
                     colors = colors,
                     onRetry = onRetry
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarioSemanalRow(diasSemana: List<DiaSemana>, colors: AcademiaColors) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        diasSemana.forEach { dia ->
+            val isHoje = dia.hoje
+            Box(
+                modifier = Modifier
+                    .size(width = if (isHoje) 46.dp else 40.dp, height = if (isHoje) 72.dp else 64.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .shadow(
+                            elevation = if (isHoje) 12.dp else 0.dp,
+                            shape = RoundedCornerShape(14.dp),
+                            ambientColor = colors.primary.copy(alpha = 0.3f),
+                            spotColor = colors.primary.copy(alpha = 0.3f)
+                        )
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isHoje) colors.primary else colors.background.copy(alpha = 0.6f))
+                        .border(
+                            width = 1.dp,
+                            color = if (isHoje) Color.Transparent else colors.surface.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(14.dp)
+                        )
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = dia.abrev,
+                        fontSize = 10.sp,
+                        fontWeight = if (isHoje) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isHoje) colors.textOnPrimary.copy(alpha = 0.8f) else colors.textSecondary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${dia.numero}",
+                        fontSize = if (isHoje) 20.sp else 16.sp,
+                        fontWeight = if (isHoje) FontWeight.ExtraBold else FontWeight.Bold,
+                        color = if (isHoje) colors.textOnPrimary else colors.textSecondary
+                    )
+                    if (isHoje) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(colors.textOnPrimary.copy(alpha = 0.6f))
+                        )
+                    }
+                }
             }
         }
     }
