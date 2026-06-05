@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import dev.fslab.academia.navigation.Screen
 import dev.fslab.academia.navigation.navigateSafely
 import dev.fslab.academia.navigation.popBackStackSafely
@@ -45,6 +46,8 @@ import dev.fslab.academia.ui.screens.aluno.TreinoFormScreen
 import dev.fslab.academia.ui.screens.aluno.TreinosScreen
 import dev.fslab.academia.ui.screens.auth.CadastroScreen
 import dev.fslab.academia.ui.screens.auth.LoginScreen
+import dev.fslab.academia.ui.screens.auth.ForgotPasswordEmailScreen
+import dev.fslab.academia.ui.screens.auth.ResetPasswordScreen
 import dev.fslab.academia.ui.screens.chat.ChatDetailScreen
 import dev.fslab.academia.ui.screens.chat.ChatScreen
 import dev.fslab.academia.ui.screens.treinador.TreinadorAlunoDetalheScreen
@@ -166,9 +169,15 @@ fun AcademiaApp(
                 }
 
                 AuthState.Idle -> {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true } // Limpa absolutamente tudo
-                        launchSingleTop = true
+                    val currentRoute = navController.currentDestination?.route
+                    if (currentRoute != Screen.Login.route && 
+                        currentRoute != Screen.Cadastro.route && 
+                        currentRoute != Screen.ForgotPassword.route && 
+                        currentRoute != Screen.ResetPassword.route) {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true } // Limpa absolutamente tudo
+                            launchSingleTop = true
+                        }
                     }
                 }
 
@@ -198,13 +207,65 @@ fun AcademiaApp(
                     isLoading = authState is AuthState.Loading,
                     errorMessage = (authState as? AuthState.Error)?.message,
                     onToggleTheme = { themeViewModel.toggle() },
-                    onEsqueciSenha = { },
+                    onEsqueciSenha = { email -> 
+                        navController.navigateSafely(Screen.ForgotPassword.route) 
+                    },
                     onRegister = { navController.navigateSafely(Screen.Cadastro.route) },
                     onLogin = { email, password ->
                         authViewModel.loginUser(email = email, password = password)
                     },
                     onGoogleLogin = onGoogleSignIn
                 )
+            }
+
+            composable(Screen.ForgotPassword.route) {
+                ForgotPasswordEmailScreen(
+                    isDarkTheme = isDarkTheme,
+                    isLoading = authState is AuthState.Loading,
+                    errorMessage = (authState as? AuthState.Error)?.message,
+                    onToggleTheme = { themeViewModel.toggle() },
+                    onSubmit = { email ->
+                        authViewModel.sendPasswordResetEmail(email)
+                    }
+                )
+                
+                LaunchedEffect(authState) {
+                    if (authState is AuthState.PasswordResetEmailSent) {
+                        navController.popBackStackSafely()
+                        authViewModel.resetStateToIdle()
+                    }
+                }
+            }
+
+            composable(
+                route = Screen.ResetPassword.route,
+                arguments = listOf(navArgument("token") { type = NavType.StringType; defaultValue = "" }),
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "academia://reset-password?token={token}" },
+                    navDeepLink { uriPattern = "https://atividadesfisicas-api-qa.yuriprojects.dpdns.org/reset-password?token={token}" }
+                )
+            ) { entry ->
+                val token = entry.arguments?.getString("token").orEmpty()
+                ResetPasswordScreen(
+                    token = token,
+                    isDarkTheme = isDarkTheme,
+                    isLoading = authState is AuthState.Loading,
+                    errorMessage = (authState as? AuthState.Error)?.message,
+                    onToggleTheme = { themeViewModel.toggle() },
+                    onSubmit = { password, t ->
+                        authViewModel.resetPassword(password, t)
+                    }
+                )
+
+                LaunchedEffect(authState) {
+                    if (authState is AuthState.PasswordResetSuccess) {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                        authViewModel.resetStateToIdle()
+                    }
+                }
             }
 
             composable(Screen.Cadastro.route) {

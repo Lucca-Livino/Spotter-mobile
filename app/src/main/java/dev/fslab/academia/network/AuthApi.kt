@@ -13,7 +13,16 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PATCH
 
+import dev.fslab.academia.model.ForgetPasswordRequest
+import dev.fslab.academia.model.ResetPasswordRequest
+
 interface AuthApi {
+    @POST("auth/request-password-reset")
+    suspend fun forgetPassword(@Body request: ForgetPasswordRequest)
+
+    @POST("auth/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest)
+
     @POST("auth/sign-in/email")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 

@@ -4,6 +4,10 @@ sealed class Screen(val route: String) {
     // Auth
     data object Login : Screen("login")
     data object Cadastro : Screen("cadastro")
+    data object ForgotPassword : Screen("forgot_password")
+    data object ResetPassword : Screen("reset_password?token={token}") {
+        fun comToken(token: String) = "reset_password?token=$token"
+    }
 
     // Comum
     data object Home : Screen("home")

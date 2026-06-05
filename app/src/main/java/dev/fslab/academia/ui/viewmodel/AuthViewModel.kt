@@ -26,6 +26,8 @@ sealed class AuthState {
     data object Loading : AuthState()
     data class Success(val user: User) : AuthState()
     data class Error(val message: String) : AuthState()
+    data object PasswordResetEmailSent : AuthState()
+    data object PasswordResetSuccess : AuthState()
 }
 
 class AuthViewModel : ViewModel() {
@@ -125,6 +127,48 @@ class AuthViewModel : ViewModel() {
 
     fun setError(message: String) {
         _authState.value = AuthState.Error(message)
+    }
+
+    fun resetStateToIdle() {
+        _authState.value = AuthState.Idle
+    }
+
+    // ── Esqueci a Senha ────────────────────────────────────────────
+    fun sendPasswordResetEmail(email: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                RetrofitClient.authApi.forgetPassword(
+                    dev.fslab.academia.model.ForgetPasswordRequest(email = email.trim())
+                )
+                _authState.value = AuthState.PasswordResetEmailSent
+            } catch (e: HttpException) {
+                val apiMessage = e.response()?.errorBody()?.string()?.let(::extractApiErrorMessage)
+                _authState.value = AuthState.Error(apiMessage ?: mapHttpError(e.code()))
+            } catch (_: Exception) {
+                _authState.value = AuthState.Error("Sem conexão com a internet")
+            }
+        }
+    }
+
+    fun resetPassword(newPassword: String, token: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                RetrofitClient.authApi.resetPassword(
+                    dev.fslab.academia.model.ResetPasswordRequest(
+                        newPassword = newPassword,
+                        token = token
+                    )
+                )
+                _authState.value = AuthState.PasswordResetSuccess
+            } catch (e: HttpException) {
+                val apiMessage = e.response()?.errorBody()?.string()?.let(::extractApiErrorMessage)
+                _authState.value = AuthState.Error(apiMessage ?: mapHttpError(e.code()))
+            } catch (_: Exception) {
+                _authState.value = AuthState.Error("Sem conexão com a internet")
+            }
+        }
     }
 
     // ── Logout ─────────────────────────────────────────────────────
