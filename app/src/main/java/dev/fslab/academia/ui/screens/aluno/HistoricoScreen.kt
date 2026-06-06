@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingFlat
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Timer
@@ -53,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.fslab.academia.model.ComparativoData
 import dev.fslab.academia.model.EstatisticasData
 import dev.fslab.academia.model.ExercicioFrequenteData
 import dev.fslab.academia.model.GrupoMuscularData
@@ -65,6 +68,7 @@ import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.AcademiaColors
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.viewmodel.ComparativoUiState
 import dev.fslab.academia.ui.viewmodel.HistoricoUiState
 import dev.fslab.academia.ui.viewmodel.HistoricoViewModel
 import dev.fslab.academia.ui.viewmodel.PeriodoFiltro
@@ -90,6 +94,7 @@ fun HistoricoScreen(
     val carregarMaisState by viewModel.carregarMaisState.collectAsState()
     val periodoFiltro by viewModel.periodoFiltro.collectAsState()
     val filtroStatus by viewModel.filtroStatus.collectAsState()
+    val comparativoState by viewModel.comparativoState.collectAsState()
 
     var mostrarMaisMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -195,6 +200,14 @@ fun HistoricoScreen(
 
                     item {
                         StatsSection(stats = state.stats, colors = colors)
+                    }
+
+                    item {
+                        SecaoEvolucaoPeriodo(
+                            state = comparativoState,
+                            periodoLabel = periodoFiltro.label,
+                            colors = colors
+                        )
                     }
 
                     if (state.grupos.isNotEmpty()) {
@@ -609,3 +622,207 @@ private fun formatarDataHoraHistorico(inicio: String?): String {
         zdt.format(fmt)
     } catch (_: Exception) { inicio }
 }
+
+// ─── Seção: Evolução do Período ───────────────────────────────────────────────
+
+@Composable
+private fun SecaoEvolucaoPeriodo(
+    state: ComparativoUiState,
+    periodoLabel: String,
+    colors: AcademiaColors
+) {
+    when (state) {
+        is ComparativoUiState.Idle, is ComparativoUiState.Error -> Unit
+        is ComparativoUiState.Loading -> {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                Text(
+                    "Evolução do período",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.textSecondary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(colors.surface)
+                        .padding(24.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = colors.primary,
+                        modifier = Modifier.size(22.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
+            }
+        }
+        is ComparativoUiState.SemDados -> {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                Text(
+                    "Evolução do período",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.textSecondary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = colors.surface),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        "Sem dados anteriores para comparar",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textSecondary,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+        }
+        is ComparativoUiState.Success -> {
+            ComparativoContent(
+                data = state.data,
+                periodoLabel = periodoLabel,
+                colors = colors
+            )
+        }
+    }
+}
+
+@Composable
+private fun ComparativoContent(
+    data: ComparativoData,
+    periodoLabel: String,
+    colors: AcademiaColors
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Evolução do período",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textSecondary
+            )
+            Text(
+                "vs período anterior",
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.textSecondary.copy(alpha = 0.6f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ComparativoMetricaCard(
+                modifier = Modifier.weight(1f),
+                label = "sessões",
+                valorAtual = "${data.periodoAtual.sessoesConcluidas}",
+                valorAnterior = "${data.periodoAnterior.sessoesConcluidas}",
+                pct = data.variacao.sessoesConcluídasPct,
+                colors = colors
+            )
+            ComparativoMetricaCard(
+                modifier = Modifier.weight(1f),
+                label = "volume",
+                valorAtual = formatarVolumeComparativo(data.periodoAtual.volumeTotalKg),
+                valorAnterior = formatarVolumeComparativo(data.periodoAnterior.volumeTotalKg),
+                pct = data.variacao.volumeTotalKgPct,
+                colors = colors
+            )
+            ComparativoMetricaCard(
+                modifier = Modifier.weight(1f),
+                label = "duração",
+                valorAtual = formatarDuracaoComparativo(data.periodoAtual.mediaDuracaoMinutos),
+                valorAnterior = formatarDuracaoComparativo(data.periodoAnterior.mediaDuracaoMinutos),
+                pct = data.variacao.mediaDuracaoMinutosPct,
+                colors = colors
+            )
+        }
+    }
+}
+
+@Composable
+private fun ComparativoMetricaCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    valorAtual: String,
+    valorAnterior: String,
+    pct: Double?,
+    colors: AcademiaColors
+) {
+    val (variacaoColor, variacaoIcon, variacaoTexto) = when {
+        pct == null -> Triple(colors.textSecondary, Icons.AutoMirrored.Filled.TrendingFlat, "—")
+        pct > 0 -> Triple(colors.primary, Icons.AutoMirrored.Filled.TrendingUp, "+${formatarPct(pct)}%")
+        pct < 0 -> Triple(colors.error, Icons.AutoMirrored.Filled.TrendingDown, "${formatarPct(pct)}%")
+        else -> Triple(colors.textSecondary, Icons.AutoMirrored.Filled.TrendingFlat, "0%")
+    }
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.textSecondary
+            )
+            Text(
+                valorAtual,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.textPrimary
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Icon(
+                    variacaoIcon,
+                    contentDescription = null,
+                    tint = variacaoColor,
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    variacaoTexto,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = variacaoColor,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            Text(
+                valorAnterior,
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.textSecondary.copy(alpha = 0.5f)
+            )
+        }
+    }
+}
+
+private fun formatarVolumeComparativo(kg: Double): String = when {
+    kg >= 1000 -> "${"%.1f".format(kg / 1000)}t"
+    kg > 0 -> "${"%.0f".format(kg)}kg"
+    else -> "0kg"
+}
+
+private fun formatarDuracaoComparativo(minutos: Int): String = when {
+    minutos >= 60 -> "${minutos / 60}h${if (minutos % 60 > 0) "${minutos % 60}m" else ""}"
+    minutos > 0 -> "${minutos}min"
+    else -> "—"
+}
+
+private fun formatarPct(pct: Double): String =
+    if (pct == pct.toLong().toDouble()) "${pct.toLong()}" else "${"%.1f".format(pct)}"
