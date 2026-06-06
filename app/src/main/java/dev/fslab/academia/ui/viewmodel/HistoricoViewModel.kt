@@ -2,6 +2,7 @@ package dev.fslab.academia.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.fslab.academia.model.ComparativoData
 import dev.fslab.academia.model.EstatisticasData
 import dev.fslab.academia.model.ExercicioFrequenteData
 import dev.fslab.academia.model.GrupoMuscularData
@@ -80,6 +81,14 @@ sealed interface ProgressaoUiState {
     data class Error(val message: String) : ProgressaoUiState
 }
 
+sealed interface ComparativoUiState {
+    data object Idle : ComparativoUiState
+    data object Loading : ComparativoUiState
+    data class Success(val data: ComparativoData) : ComparativoUiState
+    data object SemDados : ComparativoUiState
+    data class Error(val message: String) : ComparativoUiState
+}
+
 sealed interface SessaoDetalheUiState {
     data object Idle : SessaoDetalheUiState
     data object Loading : SessaoDetalheUiState
@@ -101,6 +110,9 @@ class HistoricoViewModel : ViewModel() {
     private val _sessaoDetalheState = MutableStateFlow<SessaoDetalheUiState>(SessaoDetalheUiState.Idle)
     val sessaoDetalheState: StateFlow<SessaoDetalheUiState> = _sessaoDetalheState.asStateFlow()
 
+    private val _comparativoState = MutableStateFlow<ComparativoUiState>(ComparativoUiState.Idle)
+    val comparativoState: StateFlow<ComparativoUiState> = _comparativoState.asStateFlow()
+
     private val _periodoFiltro = MutableStateFlow(PeriodoFiltro.trintaDias())
     val periodoFiltro: StateFlow<PeriodoFiltro> = _periodoFiltro.asStateFlow()
 
@@ -113,6 +125,7 @@ class HistoricoViewModel : ViewModel() {
     fun carregarHistorico(periodo: PeriodoFiltro = _periodoFiltro.value) {
         _uiState.value = HistoricoUiState.Loading
         paginaAtual = 1
+        carregarComparativo(periodo)
         viewModelScope.launch {
             try {
                 coroutineScope {
@@ -220,6 +233,43 @@ class HistoricoViewModel : ViewModel() {
     fun selecionarPeriodo(filtro: PeriodoFiltro) {
         _periodoFiltro.value = filtro
         carregarHistorico(filtro)
+        carregarComparativo(filtro)
+    }
+
+    fun carregarComparativo(periodo: PeriodoFiltro = _periodoFiltro.value) {
+        _comparativoState.value = ComparativoUiState.Loading
+        viewModelScope.launch {
+            try {
+                val resp = RetrofitClient.historicoApi.getComparativo(periodoParaSemanas(periodo))
+                val data = resp.body()?.data
+                _comparativoState.value = when {
+                    !resp.isSuccessful || data == null ->
+                        ComparativoUiState.Error("HTTP ${resp.code()}")
+                    data.periodoAtual.sessoesConcluidas == 0 && data.periodoAnterior.sessoesConcluidas == 0 ->
+                        ComparativoUiState.SemDados
+                    else -> ComparativoUiState.Success(data)
+                }
+            } catch (e: Exception) {
+                _comparativoState.value = ComparativoUiState.Error(e.message ?: "Sem conexão")
+            }
+        }
+    }
+
+    private fun periodoParaSemanas(periodo: PeriodoFiltro): Int {
+        if (periodo.dataInicio == null) return 52
+        return when (periodo.label) {
+            "7 dias" -> 1
+            "30 dias" -> 4
+            "3 meses" -> 12
+            else -> {
+                try {
+                    val inicio = Instant.parse(periodo.dataInicio)
+                    val fim = Instant.parse(periodo.dataFim ?: return 4)
+                    val dias = ChronoUnit.DAYS.between(inicio, fim).toInt()
+                    (dias / 7).coerceIn(1, 52)
+                } catch (_: Exception) { 4 }
+            }
+        }
     }
 
     fun selecionarFiltroStatus(status: String?) {

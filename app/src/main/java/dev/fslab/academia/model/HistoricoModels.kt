@@ -70,3 +70,41 @@ data class ProgressaoResponse(
     @SerializedName("error") val error: Boolean = false,
     @SerializedName("data") val data: List<ProgressaoItemData>? = null
 )
+
+data class PeriodoComparativoData(
+    @SerializedName("total_sessoes") val totalSessoes: Int = 0,
+    @SerializedName("sessoes_concluidas") val sessoesConcluidas: Int = 0,
+    @SerializedName("sessoes_canceladas") val sessoesCanceladas: Int = 0,
+    @SerializedName("tempo_total_minutos") val tempoTotalMinutos: Int = 0,
+    @SerializedName("media_duracao_minutos") val mediaDuracaoMinutos: Int = 0,
+    @SerializedName("volume_total_kg") val volumeTotalKg: Double = 0.0,
+    @SerializedName("tempo_total_isometria_segundos") val tempoTotalIsometriaSegundos: Int = 0,
+    @SerializedName("distancia_total_metros") val distanciaTotalMetros: Double = 0.0,
+    @SerializedName("treinos_por_semana_media") val treinosPorSemanaMedia: Double = 0.0
+)
+
+data class VariacaoComparativoData(
+    @SerializedName("sessoes_concluidas_pct") val sessoesConcluídasPct: Double? = null,
+    @SerializedName("sessoes_concluidas_abs") val sessoesConcluídasAbs: Int = 0,
+    @SerializedName("volume_total_kg_pct") val volumeTotalKgPct: Double? = null,
+    @SerializedName("volume_total_kg_abs") val volumeTotalKgAbs: Double = 0.0,
+    @SerializedName("media_duracao_minutos_pct") val mediaDuracaoMinutosPct: Double? = null,
+    @SerializedName("media_duracao_minutos_abs") val mediaDuracaoMinutosAbs: Double = 0.0,
+    @SerializedName("treinos_por_semana_pct") val treinosPorSemanaPct: Double? = null,
+    @SerializedName("treinos_por_semana_abs") val treinosPorSemanaAbs: Double = 0.0
+)
+
+data class ComparativoData(
+    @SerializedName("periodo_atual_inicio") val periodoAtualInicio: String,
+    @SerializedName("periodo_atual_fim") val periodoAtualFim: String,
+    @SerializedName("periodo_anterior_inicio") val periodoAnteriorInicio: String,
+    @SerializedName("periodo_anterior_fim") val periodoAnteriorFim: String,
+    @SerializedName("periodo_atual") val periodoAtual: PeriodoComparativoData,
+    @SerializedName("periodo_anterior") val periodoAnterior: PeriodoComparativoData,
+    @SerializedName("variacao") val variacao: VariacaoComparativoData
+)
+
+data class ComparativoResponse(
+    @SerializedName("error") val error: Boolean = false,
+    @SerializedName("data") val data: ComparativoData? = null
+)

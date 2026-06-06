@@ -1,5 +1,6 @@
 package dev.fslab.academia.network
 
+import dev.fslab.academia.model.ComparativoResponse
 import dev.fslab.academia.model.EstatisticasResponse
 import dev.fslab.academia.model.ExerciciosFrequentesResponse
 import dev.fslab.academia.model.GruposMusculareResponse
@@ -29,6 +30,11 @@ interface HistoricoApi {
         @Query("data_fim") dataFim: String? = null,
         @Query("limite") limite: Int = 10
     ): Response<ExerciciosFrequentesResponse>
+
+    @GET("historico/comparativo")
+    suspend fun getComparativo(
+        @Query("semanas") semanas: Int = 4
+    ): Response<ComparativoResponse>
 
     @GET("historico/progressao/{exercicioId}")
     suspend fun getProgressao(
