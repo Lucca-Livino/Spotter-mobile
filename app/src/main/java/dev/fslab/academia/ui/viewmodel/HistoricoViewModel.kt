@@ -3,6 +3,7 @@ package dev.fslab.academia.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.fslab.academia.model.ComparativoData
+import dev.fslab.academia.model.RecordeExercicioData
 import dev.fslab.academia.model.EstatisticasData
 import dev.fslab.academia.model.ExercicioFrequenteData
 import dev.fslab.academia.model.GrupoMuscularData
@@ -81,6 +82,14 @@ sealed interface ProgressaoUiState {
     data class Error(val message: String) : ProgressaoUiState
 }
 
+sealed interface RecordeUiState {
+    data object Idle : RecordeUiState
+    data object Loading : RecordeUiState
+    data class Success(val data: RecordeExercicioData) : RecordeUiState
+    data object SemDados : RecordeUiState
+    data class Error(val message: String) : RecordeUiState
+}
+
 sealed interface ComparativoUiState {
     data object Idle : ComparativoUiState
     data object Loading : ComparativoUiState
@@ -112,6 +121,9 @@ class HistoricoViewModel : ViewModel() {
 
     private val _comparativoState = MutableStateFlow<ComparativoUiState>(ComparativoUiState.Idle)
     val comparativoState: StateFlow<ComparativoUiState> = _comparativoState.asStateFlow()
+
+    private val _recordeState = MutableStateFlow<RecordeUiState>(RecordeUiState.Idle)
+    val recordeState: StateFlow<RecordeUiState> = _recordeState.asStateFlow()
 
     private val _periodoFiltro = MutableStateFlow(PeriodoFiltro.trintaDias())
     val periodoFiltro: StateFlow<PeriodoFiltro> = _periodoFiltro.asStateFlow()
@@ -251,6 +263,23 @@ class HistoricoViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _comparativoState.value = ComparativoUiState.Error(e.message ?: "Sem conexão")
+            }
+        }
+    }
+
+    fun carregarRecorde(exercicioId: String) {
+        _recordeState.value = RecordeUiState.Loading
+        viewModelScope.launch {
+            try {
+                val resp = RetrofitClient.historicoApi.getRecorde(exercicioId)
+                val data = resp.body()?.data
+                _recordeState.value = when {
+                    !resp.isSuccessful || data == null -> RecordeUiState.SemDados
+                    data.totalSessoes == 0 -> RecordeUiState.SemDados
+                    else -> RecordeUiState.Success(data)
+                }
+            } catch (e: Exception) {
+                _recordeState.value = RecordeUiState.Error(e.message ?: "Sem conexão")
             }
         }
     }

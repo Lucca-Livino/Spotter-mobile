@@ -17,11 +17,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -56,12 +58,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.fslab.academia.model.ExercicioAparelhoData
 import dev.fslab.academia.model.ExercicioData
 import dev.fslab.academia.model.ExercicioMusculoData
+import dev.fslab.academia.model.RecordeExercicioData
+import dev.fslab.academia.model.TipoExercicio
 import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.AnimacaoPlayer
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
 import dev.fslab.academia.ui.viewmodel.ExercicioDeletarUiState
 import dev.fslab.academia.ui.viewmodel.ExercicioDetalheUiState
 import dev.fslab.academia.ui.viewmodel.ExercicioViewModel
+import dev.fslab.academia.ui.viewmodel.HistoricoViewModel
+import dev.fslab.academia.ui.viewmodel.RecordeUiState
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun ExercicioDetalheScreen(
@@ -69,11 +79,13 @@ fun ExercicioDetalheScreen(
     onBack: () -> Unit,
     onEditar: (String) -> Unit,
     onExcluido: () -> Unit,
-    viewModel: ExercicioViewModel = viewModel()
+    viewModel: ExercicioViewModel = viewModel(),
+    histViewModel: HistoricoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
     val detalheState by viewModel.detalheState.collectAsState()
     val deletarState by viewModel.deletarState.collectAsState()
+    val recordeState by histViewModel.recordeState.collectAsState()
 
     var mostrarDialogoExcluir by remember { mutableStateOf(false) }
     var mostrarDialogoConflito by remember { mutableStateOf(false) }
@@ -81,6 +93,7 @@ fun ExercicioDetalheScreen(
 
     LaunchedEffect(exercicioId) {
         viewModel.carregarDetalhe(exercicioId)
+        histViewModel.carregarRecorde(exercicioId)
     }
 
     LaunchedEffect(deletarState) {
@@ -166,6 +179,7 @@ fun ExercicioDetalheScreen(
                 is ExercicioDetalheUiState.Success -> {
                     DetalheConteudo(
                         exercicio = s.exercicio,
+                        recordeState = recordeState,
                         carregando = deletarState is ExercicioDeletarUiState.Loading,
                         onEditar = { onEditar(s.exercicio.id) },
                         onExcluir = { mostrarDialogoExcluir = true }
@@ -251,6 +265,7 @@ fun ExercicioDetalheScreen(
 @Composable
 private fun DetalheConteudo(
     exercicio: ExercicioData,
+    recordeState: RecordeUiState,
     carregando: Boolean,
     onEditar: () -> Unit,
     onExcluir: () -> Unit
@@ -266,6 +281,10 @@ private fun DetalheConteudo(
         contentPadding = PaddingValues(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        item {
+            CardRecordeCompacto(recordeState = recordeState, colors = colors)
+        }
+
         item {
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -580,6 +599,70 @@ private fun ItemAparelho(aparelho: ExercicioAparelhoData) {
                         color = colors.textSecondary,
                         style = MaterialTheme.typography.labelMedium
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CardRecordeCompacto(
+    recordeState: RecordeUiState,
+    colors: dev.fslab.academia.ui.theme.AcademiaColors
+) {
+    val recorde = (recordeState as? RecordeUiState.Success)?.data ?: return
+    val prOuro = colors.featureOrange
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, prOuro.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = prOuro.copy(alpha = 0.08f))
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(prOuro.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.EmojiEvents, contentDescription = null, tint = prOuro, modifier = Modifier.size(20.dp))
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text("Recorde Pessoal", style = MaterialTheme.typography.labelSmall, color = prOuro, fontWeight = FontWeight.Bold)
+                val valorPr = when (recorde.tipo) {
+                    TipoExercicio.REPETICAO -> recorde.maiorCargaKg?.let {
+                        val carga = if (it % 1 == 0.0) it.toInt().toString() else "%.1f".format(it)
+                        "$carga kg" + (recorde.repeticoesNoPr?.let { r -> " × $r reps" } ?: "")
+                    } ?: "—"
+                    TipoExercicio.TEMPO -> recorde.melhorTempoSegundos?.let { s ->
+                        val m = s / 60; val sec = s % 60
+                        if (m > 0) "${m}m${sec}s" else "${sec}s"
+                    } ?: "—"
+                    TipoExercicio.DISTANCIA -> recorde.maiorDistanciaMetros?.let { d ->
+                        if (d >= 1000) "${"%.2f".format(d / 1000)} km" else "${d.toInt()} m"
+                    } ?: "—"
+                }
+                Text(valorPr, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = colors.textPrimary)
+            }
+            val dataPr = when (recorde.tipo) {
+                TipoExercicio.REPETICAO -> recorde.dataPrCarga
+                TipoExercicio.TEMPO -> recorde.dataPrTempo
+                TipoExercicio.DISTANCIA -> recorde.dataPrDistancia
+            }
+            if (dataPr != null) {
+                val dataFormatada = try {
+                    val zdt = Instant.parse(dataPr).atZone(ZoneId.systemDefault())
+                    DateTimeFormatter.ofPattern("dd/MM/yy", Locale.forLanguageTag("pt-BR")).format(zdt)
+                } catch (_: Exception) { "" }
+                if (dataFormatada.isNotEmpty()) {
+                    Text(dataFormatada, style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
                 }
             }
         }

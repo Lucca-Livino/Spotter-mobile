@@ -108,3 +108,26 @@ data class ComparativoResponse(
     @SerializedName("error") val error: Boolean = false,
     @SerializedName("data") val data: ComparativoData? = null
 )
+
+data class RecordeExercicioData(
+    @SerializedName("exercicio_id") val exercicioId: String,
+    @SerializedName("nome") val nome: String,
+    @SerializedName("tipo_exercicio") val tipoExercicio: String = "REPETICAO",
+    @SerializedName("total_sessoes") val totalSessoes: Int = 0,
+    @SerializedName("maior_carga_kg") val maiorCargaKg: Double? = null,
+    @SerializedName("repeticoes_no_pr") val repeticoesNoPr: Int? = null,
+    @SerializedName("data_pr_carga") val dataPrCarga: String? = null,
+    @SerializedName("melhor_tempo_segundos") val melhorTempoSegundos: Int? = null,
+    @SerializedName("data_pr_tempo") val dataPrTempo: String? = null,
+    @SerializedName("maior_distancia_metros") val maiorDistanciaMetros: Double? = null,
+    @SerializedName("data_pr_distancia") val dataPrDistancia: String? = null,
+    @SerializedName("melhor_pace_segundos_por_km") val melhorPaceSegundosPorKm: Int? = null,
+    @SerializedName("data_pr_pace") val dataPrPace: String? = null
+) {
+    val tipo: TipoExercicio get() = TipoExercicio.fromApi(tipoExercicio)
+}
+
+data class RecordeResponse(
+    @SerializedName("error") val error: Boolean = false,
+    @SerializedName("data") val data: RecordeExercicioData? = null
+)

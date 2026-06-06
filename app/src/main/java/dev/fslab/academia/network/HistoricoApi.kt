@@ -2,6 +2,7 @@ package dev.fslab.academia.network
 
 import dev.fslab.academia.model.ComparativoResponse
 import dev.fslab.academia.model.EstatisticasResponse
+import dev.fslab.academia.model.RecordeResponse
 import dev.fslab.academia.model.ExerciciosFrequentesResponse
 import dev.fslab.academia.model.GruposMusculareResponse
 import dev.fslab.academia.model.ProgressaoResponse
@@ -35,6 +36,11 @@ interface HistoricoApi {
     suspend fun getComparativo(
         @Query("semanas") semanas: Int = 4
     ): Response<ComparativoResponse>
+
+    @GET("historico/recordes/{exercicioId}")
+    suspend fun getRecorde(
+        @Path("exercicioId") exercicioId: String
+    ): Response<RecordeResponse>
 
     @GET("historico/progressao/{exercicioId}")
     suspend fun getProgressao(

@@ -58,7 +58,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material3.Icon
 import dev.fslab.academia.model.ProgressaoItemData
+import dev.fslab.academia.model.RecordeExercicioData
 import dev.fslab.academia.model.TipoExercicio
 import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.theme.AcademiaColors
@@ -66,6 +72,7 @@ import dev.fslab.academia.ui.theme.LocalAcademiaColors
 import dev.fslab.academia.ui.viewmodel.HistoricoViewModel
 import dev.fslab.academia.ui.viewmodel.PeriodoFiltro
 import dev.fslab.academia.ui.viewmodel.ProgressaoUiState
+import dev.fslab.academia.ui.viewmodel.RecordeUiState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -84,12 +91,14 @@ fun HistoricoProgressaoScreen(
     val colors = LocalAcademiaColors.current
     val progressaoState by viewModel.progressaoState.collectAsState()
     val periodoFiltro by viewModel.periodoFiltro.collectAsState()
+    val recordeState by viewModel.recordeState.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDateRangePickerState()
 
     LaunchedEffect(exercicioId) {
         viewModel.carregarProgressao(exercicioId, exercicioNome)
+        viewModel.carregarRecorde(exercicioId)
     }
 
     if (showDatePicker) {
@@ -146,6 +155,10 @@ fun HistoricoProgressaoScreen(
                     modifier = Modifier.fillMaxSize().padding(padding),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
+                    item {
+                        CardRecordePr(recordeState = recordeState, colors = colors)
+                    }
+
                     item {
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -635,6 +648,99 @@ private fun formatarDataCurtaProgressao(iso: String?): String {
         val instant = Instant.parse(iso)
         val zdt = instant.atZone(ZoneId.systemDefault())
         DateTimeFormatter.ofPattern("dd/MM", java.util.Locale.forLanguageTag("pt-BR")).format(zdt)
+    } catch (_: Exception) { "" }
+}
+
+@Composable
+private fun CardRecordePr(recordeState: RecordeUiState, colors: AcademiaColors) {
+    val recorde = (recordeState as? RecordeUiState.Success)?.data ?: return
+    val prOuro = colors.featureOrange
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(1.dp, prOuro.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = prOuro.copy(alpha = 0.08f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Filled.EmojiEvents, contentDescription = null, tint = prOuro, modifier = Modifier.size(20.dp))
+                Text(
+                    "Recorde Pessoal",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = prOuro
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                when (recorde.tipo) {
+                    TipoExercicio.REPETICAO -> {
+                        if (recorde.maiorCargaKg != null) {
+                            ColunaRecorde(
+                                label = "Carga máxima",
+                                valor = "${recorde.maiorCargaKg.let { if (it % 1 == 0.0) it.toInt().toString() else "%.1f".format(it) }} kg",
+                                detalhe = recorde.repeticoesNoPr?.let { "${it} reps" },
+                                data = formatarDataRecorde(recorde.dataPrCarga),
+                                colors = colors
+                            )
+                        }
+                    }
+                    TipoExercicio.TEMPO -> {
+                        if (recorde.melhorTempoSegundos != null) {
+                            ColunaRecorde(
+                                label = "Melhor tempo",
+                                valor = formatarSegundosCurto(recorde.melhorTempoSegundos),
+                                detalhe = null,
+                                data = formatarDataRecorde(recorde.dataPrTempo),
+                                colors = colors
+                            )
+                        }
+                    }
+                    TipoExercicio.DISTANCIA -> {
+                        if (recorde.maiorDistanciaMetros != null) {
+                            ColunaRecorde(
+                                label = "Maior distância",
+                                valor = if (recorde.maiorDistanciaMetros >= 1000)
+                                    "${"%.2f".format(recorde.maiorDistanciaMetros / 1000)} km"
+                                else
+                                    "${recorde.maiorDistanciaMetros.toInt()} m",
+                                detalhe = null,
+                                data = formatarDataRecorde(recorde.dataPrDistancia),
+                                colors = colors
+                            )
+                        }
+                    }
+                }
+                ColunaRecorde(
+                    label = "Sessões",
+                    valor = recorde.totalSessoes.toString(),
+                    detalhe = "total",
+                    data = null,
+                    colors = colors
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColunaRecorde(label: String, valor: String, detalhe: String?, data: String?, colors: AcademiaColors) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
+        Text(valor, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = colors.textPrimary)
+        if (detalhe != null) Text(detalhe, style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
+        if (data != null) Text(data, style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
+    }
+}
+
+private fun formatarDataRecorde(iso: String?): String {
+    if (iso == null) return ""
+    return try {
+        val instant = Instant.parse(iso)
+        val zdt = instant.atZone(ZoneId.systemDefault())
+        DateTimeFormatter.ofPattern("dd/MM/yy", Locale.forLanguageTag("pt-BR")).format(zdt)
     } catch (_: Exception) { "" }
 }
 
