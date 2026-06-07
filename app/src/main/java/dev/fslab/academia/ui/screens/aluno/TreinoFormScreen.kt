@@ -15,14 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -55,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -74,6 +75,8 @@ import dev.fslab.academia.ui.viewmodel.TreinoExercicioPatchUpdate
 import dev.fslab.academia.ui.viewmodel.TreinoListUiState
 import dev.fslab.academia.ui.viewmodel.TreinoSalvarUiState
 import dev.fslab.academia.ui.viewmodel.TreinoViewModel
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 private data class ItemForm(
     val vinculoId: String?,
@@ -220,6 +223,19 @@ fun TreinoFormScreen(
     val carregando = salvarState is TreinoSalvarUiState.Loading
     val carregandoDetalhe = ehEdicao && detalheState is TreinoDetalheUiState.Loading
 
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        val fromKey = from.key as? String ?: return@rememberReorderableLazyListState
+        val toKey = to.key as? String ?: return@rememberReorderableLazyListState
+        val fromIdx = itens.indexOfFirst { it.exercicioId == fromKey }
+        val toIdx = itens.indexOfFirst { it.exercicioId == toKey }
+        if (fromIdx >= 0 && toIdx >= 0) {
+            itens = itens.toMutableList().apply {
+                add(toIdx, removeAt(fromIdx))
+            }.mapIndexed { idx, item -> item.copy(ordemExecucao = idx + 1) }
+        }
+    }
+
     Scaffold(
         containerColor = colors.background,
         topBar = {
@@ -249,6 +265,7 @@ fun TreinoFormScreen(
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                state = lazyListState,
                 contentPadding = PaddingValues(vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
@@ -330,35 +347,22 @@ fun TreinoFormScreen(
                 }
 
                 items(itens, key = { it.exercicioId }) { item ->
-                    val pode_subir = itens.indexOf(item) > 0
-                    val pode_descer = itens.indexOf(item) < itens.size - 1
-                    ItemTreinoCard(
-                        item = item,
-                        podeSubir = pode_subir,
-                        podeDescer = pode_descer,
-                        onSubir = {
-                            val idx = itens.indexOf(item)
-                            if (idx > 0) {
-                                val nova = itens.toMutableList()
-                                val tmp = nova[idx - 1]
-                                nova[idx - 1] = nova[idx].copy(ordemExecucao = idx)
-                                nova[idx] = tmp.copy(ordemExecucao = idx + 1)
-                                itens = nova
-                            }
-                        },
-                        onDescer = {
-                            val idx = itens.indexOf(item)
-                            if (idx < itens.size - 1) {
-                                val nova = itens.toMutableList()
-                                val tmp = nova[idx + 1]
-                                nova[idx + 1] = nova[idx].copy(ordemExecucao = idx + 2)
-                                nova[idx] = tmp.copy(ordemExecucao = idx + 1)
-                                itens = nova
-                            }
-                        },
-                        onEditar = { itemEditando = item },
-                        onRemover = { itens = itens.filter { it.exercicioId != item.exercicioId } }
-                    )
+                    ReorderableItem(reorderableLazyListState, key = item.exercicioId) { isDragging ->
+                        ItemTreinoCard(
+                            item = item,
+                            isDragging = isDragging,
+                            dragHandle = {
+                                Icon(
+                                    Icons.Filled.DragHandle,
+                                    contentDescription = "Reordenar",
+                                    tint = colors.textSecondary,
+                                    modifier = Modifier.draggableHandle().size(20.dp)
+                                )
+                            },
+                            onEditar = { itemEditando = item },
+                            onRemover = { itens = itens.filter { it.exercicioId != item.exercicioId } }
+                        )
+                    }
                 }
 
                 item { Spacer(Modifier.height(8.dp)) }
@@ -662,10 +666,8 @@ private fun BotaoSelecionarDias(
 @Composable
 private fun ItemTreinoCard(
     item: ItemForm,
-    podeSubir: Boolean,
-    podeDescer: Boolean,
-    onSubir: () -> Unit,
-    onDescer: () -> Unit,
+    isDragging: Boolean,
+    dragHandle: @Composable () -> Unit,
     onEditar: () -> Unit,
     onRemover: () -> Unit
 ) {
@@ -681,8 +683,13 @@ private fun ItemTreinoCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onEditar),
-        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (isDragging) Modifier.shadow(8.dp, RoundedCornerShape(12.dp)) else Modifier)
+            .clickable(onClick = onEditar),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDragging) colors.surface.copy(alpha = 0.95f) else colors.surface
+        ),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -715,18 +722,7 @@ private fun ItemTreinoCard(
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
-                IconButton(onClick = onSubir, enabled = podeSubir) {
-                    Icon(
-                        Icons.Filled.ArrowUpward, "Subir",
-                        tint = if (podeSubir) colors.textPrimary else colors.textSecondary
-                    )
-                }
-                IconButton(onClick = onDescer, enabled = podeDescer) {
-                    Icon(
-                        Icons.Filled.ArrowDownward, "Descer",
-                        tint = if (podeDescer) colors.textPrimary else colors.textSecondary
-                    )
-                }
+                dragHandle()
                 IconButton(onClick = onRemover) {
                     Icon(Icons.Filled.Delete, "Remover", tint = colors.error)
                 }
