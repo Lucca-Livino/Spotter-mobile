@@ -16,6 +16,13 @@ import retrofit2.HttpException
 import java.time.DayOfWeek
 import java.time.LocalDate
 
+sealed interface AlunoVinculoState {
+    data object Loading : AlunoVinculoState
+    data object SemTreinador : AlunoVinculoState
+    data class SolicitacaoPendente(val treinadorNome: String) : AlunoVinculoState
+    data class ComTreinador(val treinadorId: String) : AlunoVinculoState
+}
+
 sealed interface HomeUiState {
     data object Idle : HomeUiState
     data object Loading : HomeUiState
@@ -35,14 +42,19 @@ class HomeViewModel : ViewModel() {
     private val _streak = MutableStateFlow(HomeStreakState(null, null))
     val streak: StateFlow<HomeStreakState> = _streak.asStateFlow()
 
+    private val _vinculoState = MutableStateFlow<AlunoVinculoState>(AlunoVinculoState.Loading)
+    val vinculoState: StateFlow<AlunoVinculoState> = _vinculoState.asStateFlow()
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun carregarDados() {
         viewModelScope.launch {
             coroutineScope {
                 val treinoJob = async { carregarTreinoDoDia() }
                 val streakJob = async { carregarStreak() }
+                val vinculoJob = async { carregarVinculo() }
                 treinoJob.await()
                 streakJob.await()
+                vinculoJob.await()
             }
         }
     }
@@ -81,6 +93,32 @@ class HomeViewModel : ViewModel() {
             )
         } catch (_: Exception) {
             _streak.value = HomeStreakState(dias = 0, melhor = 0)
+        }
+    }
+
+    private suspend fun carregarVinculo() {
+        try {
+            val perfil = RetrofitClient.profileApi.getAlunoProfile()
+            val treinadorId = perfil.data.treinadorId
+            if (treinadorId != null) {
+                _vinculoState.value = AlunoVinculoState.ComTreinador(treinadorId)
+                return
+            }
+            try {
+                val solicitacao = RetrofitClient.solicitacaoApi.buscarSolicitacaoDoAluno()
+                val data = solicitacao.data
+                if (data != null && data.status == "PENDENTE") {
+                    _vinculoState.value = AlunoVinculoState.SolicitacaoPendente(
+                        treinadorNome = data.treinador?.nome ?: "Treinador"
+                    )
+                } else {
+                    _vinculoState.value = AlunoVinculoState.SemTreinador
+                }
+            } catch (_: Exception) {
+                _vinculoState.value = AlunoVinculoState.SemTreinador
+            }
+        } catch (_: Exception) {
+            _vinculoState.value = AlunoVinculoState.SemTreinador
         }
     }
 

@@ -33,6 +33,8 @@ import dev.fslab.academia.ui.screens.HomeScreen
 import dev.fslab.academia.ui.screens.ProfileScreen
 import dev.fslab.academia.ui.screens.PlaceholderScreen
 import dev.fslab.academia.ui.screens.aluno.AparelhosScreen
+import dev.fslab.academia.ui.screens.aluno.BuscarTreinadorScreen
+import dev.fslab.academia.ui.screens.aluno.PerfilTreinadorScreen
 import dev.fslab.academia.ui.screens.aluno.HistoricoProgressaoScreen
 import dev.fslab.academia.ui.screens.aluno.HistoricoScreen
 import dev.fslab.academia.ui.screens.aluno.SessaoDetalheScreen
@@ -318,6 +320,9 @@ fun AcademiaApp(
                     onAbrirTreinoDoDia = { treinoId ->
                         navController.navigateSafely(Screen.TreinoDetalhe.comId(treinoId))
                     },
+                    onBuscarTreinador = {
+                        navController.navigateSafely(Screen.BuscarTreinador.route)
+                    },
                     homeViewModel = homeViewModel
                 )
             }
@@ -337,6 +342,26 @@ fun AcademiaApp(
                     },
                     onNotifications = { },
                     onLogout = { authViewModel.logout() }
+                )
+            }
+
+            composable(Screen.BuscarTreinador.route) {
+                BuscarTreinadorScreen(
+                    onBack = { navController.popBackStackSafely() },
+                    onAbrirPerfil = { id ->
+                        navController.navigateSafely(Screen.PerfilTreinador.comId(id))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.PerfilTreinador.route,
+                arguments = listOf(navArgument("treinadorId") { type = NavType.StringType })
+            ) { entry ->
+                val treinadorId = entry.arguments?.getString("treinadorId").orEmpty()
+                PerfilTreinadorScreen(
+                    treinadorId = treinadorId,
+                    onBack = { navController.popBackStackSafely() }
                 )
             }
 

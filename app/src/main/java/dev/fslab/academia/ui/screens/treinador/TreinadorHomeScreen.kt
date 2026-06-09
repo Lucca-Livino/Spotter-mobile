@@ -20,12 +20,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.fslab.academia.ui.components.TreinadorNavigationBar
 import dev.fslab.academia.ui.components.treinadorNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.model.SolicitacaoData
 import dev.fslab.academia.ui.viewmodel.TreinadorClienteUi
 import dev.fslab.academia.ui.viewmodel.TreinadorHomeUiState
 import dev.fslab.academia.ui.viewmodel.TreinadorHomeViewModel
@@ -87,6 +96,8 @@ fun TreinadorHomeScreen(
 
     val clientes = (uiState as? TreinadorHomeUiState.Success)?.clientes.orEmpty()
     val clientesHoje = clientes.filter { it.diasTreino.contains(diaHoje) }
+    val solicitacoes by viewModel.solicitacoes.collectAsState()
+    val respondendoId by viewModel.respondendoId.collectAsState()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -383,7 +394,155 @@ fun TreinadorHomeScreen(
                 else -> Unit
             }
 
+            // ── Solicitações Pendentes ────────────────────────────────────
+            if (solicitacoes.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .padding(horizontal = 20.dp)
+                        .background(colors.inputBorder)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = null,
+                        tint = colors.featureOrange,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Solicitações",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textPrimary
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(colors.featureOrange.copy(alpha = 0.2f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = solicitacoes.size.toString(),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.featureOrange
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    solicitacoes.forEach { solicitacao ->
+                        SolicitacaoCard(
+                            solicitacao = solicitacao,
+                            respondendo = respondendoId == solicitacao.id,
+                            onAceitar = { viewModel.responder(solicitacao.id, aceitar = true) },
+                            onRecusar = { viewModel.responder(solicitacao.id, aceitar = false) }
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun SolicitacaoCard(
+    solicitacao: SolicitacaoData,
+    respondendo: Boolean,
+    onAceitar: () -> Unit,
+    onRecusar: () -> Unit
+) {
+    val colors = LocalAcademiaColors.current
+    val aluno = solicitacao.aluno
+    val nome = aluno?.nome ?: "Aluno"
+    val iniciais = nome.split(" ").take(2).joinToString("") { it.firstOrNull()?.uppercase() ?: "" }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.surface)
+            .border(1.dp, colors.featureOrange.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(colors.featureOrange.copy(alpha = 0.15f))
+                .border(2.dp, colors.featureOrange.copy(alpha = 0.4f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = iniciais,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = colors.featureOrange
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = nome,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        if (respondendo) {
+            CircularProgressIndicator(
+                color = colors.primary,
+                modifier = Modifier.size(24.dp),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedButton(
+                    onClick = onRecusar,
+                    modifier = Modifier.height(34.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.error.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.error)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Recusar", modifier = Modifier.size(14.dp))
+                }
+                Button(
+                    onClick = onAceitar,
+                    modifier = Modifier.height(34.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = "Aceitar", modifier = Modifier.size(14.dp))
+                }
+            }
         }
     }
 }

@@ -3,8 +3,12 @@ package dev.fslab.academia.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.fslab.academia.model.AlunoData
+import dev.fslab.academia.model.ResponderSolicitacaoRequest
+import dev.fslab.academia.model.SolicitacaoData
 import dev.fslab.academia.model.TreinoData
 import dev.fslab.academia.network.RetrofitClient
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,29 +39,21 @@ class TreinadorHomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<TreinadorHomeUiState>(TreinadorHomeUiState.Idle)
     val uiState: StateFlow<TreinadorHomeUiState> = _uiState.asStateFlow()
 
+    private val _solicitacoes = MutableStateFlow<List<SolicitacaoData>>(emptyList())
+    val solicitacoes: StateFlow<List<SolicitacaoData>> = _solicitacoes.asStateFlow()
+
+    private val _respondendoId = MutableStateFlow<String?>(null)
+    val respondendoId: StateFlow<String?> = _respondendoId.asStateFlow()
+
     fun carregar() {
         viewModelScope.launch {
             _uiState.value = TreinadorHomeUiState.Loading
             try {
-                val alunosResponse = RetrofitClient.treinadorApi.listarAlunosVinculados(
-                    page = 1,
-                    limite = 100
-                )
-                val alunos = alunosResponse.data?.dados.orEmpty()
-
-                val treinosResponse = RetrofitClient.treinoApi.listar(
-                    page = 1,
-                    limite = 100,
-                    incluirExercicios = false,
-                    somenteComExercicios = false
-                )
-                val treinos = treinosResponse.data?.dados.orEmpty()
-
-                val clientes = buildClientes(alunos, treinos)
-                _uiState.value = if (clientes.isEmpty()) {
-                    TreinadorHomeUiState.Empty
-                } else {
-                    TreinadorHomeUiState.Success(clientes)
+                coroutineScope {
+                    val clientesJob = async { carregarClientes() }
+                    val solicitacoesJob = async { carregarSolicitacoes() }
+                    clientesJob.await()
+                    solicitacoesJob.await()
                 }
             } catch (e: HttpException) {
                 val apiMsg = e.response()?.errorBody()?.string()?.let(::extractApiErrorMessage)
@@ -66,6 +62,41 @@ class TreinadorHomeViewModel : ViewModel() {
                 _uiState.value = TreinadorHomeUiState.Error(
                     e.message ?: "Sem conexão com a internet"
                 )
+            }
+        }
+    }
+
+    private suspend fun carregarClientes() {
+        val alunosResponse = RetrofitClient.treinadorApi.listarAlunosVinculados(page = 1, limite = 100)
+        val alunos = alunosResponse.data?.dados.orEmpty()
+        val treinosResponse = RetrofitClient.treinoApi.listar(page = 1, limite = 100, incluirExercicios = false, somenteComExercicios = false)
+        val treinos = treinosResponse.data?.dados.orEmpty()
+        val clientes = buildClientes(alunos, treinos)
+        _uiState.value = if (clientes.isEmpty()) TreinadorHomeUiState.Empty else TreinadorHomeUiState.Success(clientes)
+    }
+
+    private suspend fun carregarSolicitacoes() {
+        try {
+            val resp = RetrofitClient.solicitacaoApi.listarSolicitacoesTreinador(status = "PENDENTE")
+            _solicitacoes.value = resp.data.orEmpty()
+        } catch (_: Exception) {
+            _solicitacoes.value = emptyList()
+        }
+    }
+
+    fun responder(solicitacaoId: String, aceitar: Boolean) {
+        viewModelScope.launch {
+            _respondendoId.value = solicitacaoId
+            try {
+                RetrofitClient.solicitacaoApi.responderSolicitacao(
+                    id = solicitacaoId,
+                    body = ResponderSolicitacaoRequest(status = if (aceitar) "ACEITA" else "RECUSADA")
+                )
+                _solicitacoes.value = _solicitacoes.value.filter { it.id != solicitacaoId }
+                if (aceitar) carregar()
+            } catch (_: Exception) {
+            } finally {
+                _respondendoId.value = null
             }
         }
     }
