@@ -340,7 +340,7 @@ fun StepPerfil(viewModel: CadastroViewModel, academias: List<AcademiaData>) {
             onClick = {
                 val acId = academiaSelecionada?.id ?: ""
                 if (viewModel.tipo == UserTipo.ALUNO) {
-                    viewModel.finalizarCadastroAluno(rawDateValue, sexo.valor, acId, peso.toDoubleOrNull(), altura.toDoubleOrNull())
+                    viewModel.finalizarCadastroAluno(rawDateValue, sexo.valor, acId, peso.toDoubleOrNull(), altura.toIntOrNull())
                 } else {
                     viewModel.finalizarCadastroTreinador(rawDateValue, sexo.valor, acId, cref, graduacao, especializacao)
                 }

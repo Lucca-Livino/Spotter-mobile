@@ -95,7 +95,7 @@ class PerfilViewModel : ViewModel() {
         dataNascimento: String,
         sexo: String,
         peso: Double?,
-        altura: Double?,
+        altura: Int?,
         academiasIds: List<String>? = null,
         fotoUri: Uri? = null,
         onSuccess: () -> Unit
@@ -108,7 +108,7 @@ class PerfilViewModel : ViewModel() {
                     put("data_nascimento", dataNascimento)
                     put("sexo", sexo)
                     put("peso_atual_kg", peso)
-                    put("altura_m", altura)
+                    put("altura_cm", altura)
                     academiasIds?.let { 
                         put("academias_ids", org.json.JSONArray(it))
                     }

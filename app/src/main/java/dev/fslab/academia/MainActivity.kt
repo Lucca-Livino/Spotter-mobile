@@ -33,10 +33,12 @@ import dev.fslab.academia.ui.screens.HomeScreen
 import dev.fslab.academia.ui.screens.ProfileScreen
 import dev.fslab.academia.ui.screens.PlaceholderScreen
 import dev.fslab.academia.ui.screens.aluno.AparelhosScreen
+import dev.fslab.academia.ui.screens.aluno.HistoricoPesoScreen
 import dev.fslab.academia.ui.screens.aluno.HistoricoProgressaoScreen
 import dev.fslab.academia.ui.screens.aluno.HistoricoScreen
 import dev.fslab.academia.ui.screens.aluno.SessaoDetalheScreen
 import dev.fslab.academia.ui.viewmodel.HistoricoViewModel
+import dev.fslab.academia.ui.viewmodel.HistoricoPesoViewModel
 import dev.fslab.academia.ui.screens.aluno.ExercicioCatalogoScreen
 import dev.fslab.academia.ui.screens.aluno.ExercicioDetalheScreen
 import dev.fslab.academia.ui.screens.aluno.ExercicioFormScreen
@@ -572,12 +574,28 @@ fun AcademiaApp(
                     viewModel = historicoViewModel
                 )
             }
+            composable(
+                route = Screen.HistoricoPeso.route,
+                arguments = listOf(navArgument("alunoId") { type = NavType.StringType })
+            ) { entry ->
+                val alunoId = entry.arguments?.getString("alunoId").orEmpty()
+                val historicoPesoViewModel: HistoricoPesoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                HistoricoPesoScreen(
+                    alunoId = alunoId,
+                    onBack = { navController.popBackStackSafely() },
+                    viewModel = historicoPesoViewModel
+                )
+            }
+
             composable(Screen.Perfil.route) {
                 ProfileScreen(
                     userTipo = currentUser?.tipo ?: UserTipo.ALUNO,
                     onBack = {
                         navController.popBackStackSafely()
                         authViewModel.checkSession()
+                    },
+                    onHistoricoPeso = { alunoId ->
+                        navController.navigateSafely(Screen.HistoricoPeso.comId(alunoId))
                     },
                     viewModel = perfilViewModel
                 )

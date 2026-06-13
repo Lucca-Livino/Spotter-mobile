@@ -80,6 +80,7 @@ import dev.fslab.academia.ui.viewmodel.PerfilViewModel
 fun ProfileScreen(
     userTipo: UserTipo,
     onBack: () -> Unit,
+    onHistoricoPeso: ((String) -> Unit)? = null,
     viewModel: PerfilViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val colors = LocalAcademiaColors.current
@@ -138,6 +139,7 @@ fun ProfileScreen(
                     onDeleteAccount = {
                         viewModel.deletarConta(context, onSuccess = onBack)
                     },
+                    onHistoricoPeso = onHistoricoPeso?.let { cb -> { cb(state.profile.id) } },
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -182,6 +184,7 @@ fun AlunoProfileContent(
     isUpdating: Boolean,
     onSave: (AlunoProfileData, Uri?, List<String>) -> Unit,
     onDeleteAccount: () -> Unit,
+    onHistoricoPeso: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAcademiaColors.current
@@ -274,7 +277,17 @@ fun AlunoProfileContent(
                 ProfileField(label = "Peso atual (kg)", value = peso, onValueChange = { peso = it })
             }
             Box(modifier = Modifier.weight(1f)) {
-                ProfileField(label = "Altura (m)", value = altura, onValueChange = { altura = it })
+                ProfileField(label = "Altura (cm)", value = altura, onValueChange = { altura = it })
+            }
+        }
+
+        if (onHistoricoPeso != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            TextButton(
+                onClick = onHistoricoPeso,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ver histórico de peso", color = colors.primary, fontWeight = FontWeight.SemiBold)
             }
         }
 
@@ -311,7 +324,7 @@ fun AlunoProfileContent(
                     dataNascimento = dataNascimento,
                     sexo = generoSelected,
                     pesoKg = peso.toDoubleOrNull(),
-                    alturaCm = altura.toDoubleOrNull()
+                    alturaCm = altura.toIntOrNull()
                 )
                 onSave(updated, imageUri, selectedAcademias.toList())
             },

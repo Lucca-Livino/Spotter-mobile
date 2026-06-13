@@ -22,7 +22,7 @@ data class AlunoProfileData(
     @SerializedName("sexo") val sexo: Genero? = null,
     @SerializedName("url_foto") val urlFoto: String? = null,
     @SerializedName("peso_atual_kg") val pesoKg: Double? = null,
-    @SerializedName("altura_m") val alturaCm: Double? = null,
+    @SerializedName("altura_cm") val alturaCm: Int? = null,
     @SerializedName("academia_id") val academiaId: String? = null,
     @SerializedName("academias") val academias: List<AcademiaData>? = emptyList()
 )
