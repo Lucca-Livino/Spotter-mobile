@@ -3,16 +3,25 @@ package dev.fslab.academia.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.fslab.academia.model.AlunoData
+import dev.fslab.academia.model.EstatisticasData
+import dev.fslab.academia.model.ExercicioFrequenteData
+import dev.fslab.academia.model.GrupoMuscularData
 import dev.fslab.academia.model.TreinoData
 import dev.fslab.academia.network.RetrofitClient
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 sealed interface TreinadorAlunoDetalheUiState {
     data object Idle : TreinadorAlunoDetalheUiState
@@ -33,6 +42,24 @@ sealed interface DesvincularAlunoState {
     data class Error(val message: String) : DesvincularAlunoState
 }
 
+enum class PeriodoEstatisticasAluno(val label: String, val dias: Int, val semanas: Int) {
+    TRINTA_DIAS("30 dias", 30, 4),
+    TRES_MESES("3 meses", 90, 12),
+    SEIS_MESES("6 meses", 180, 26)
+}
+
+sealed interface AlunoEstatisticasUiState {
+    data object Idle : AlunoEstatisticasUiState
+    data object Loading : AlunoEstatisticasUiState
+    data class Success(
+        val stats: EstatisticasData,
+        val grupos: List<GrupoMuscularData>,
+        val frequentes: List<ExercicioFrequenteData>,
+        val comparativo: ComparativoUiState
+    ) : AlunoEstatisticasUiState
+    data class Error(val message: String) : AlunoEstatisticasUiState
+}
+
 class TreinadorAlunoDetalheViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow<TreinadorAlunoDetalheUiState>(TreinadorAlunoDetalheUiState.Idle)
@@ -40,6 +67,12 @@ class TreinadorAlunoDetalheViewModel : ViewModel() {
 
     private val _desvincularState = MutableStateFlow<DesvincularAlunoState>(DesvincularAlunoState.Idle)
     val desvincularState: StateFlow<DesvincularAlunoState> = _desvincularState.asStateFlow()
+
+    private val _estatisticasState = MutableStateFlow<AlunoEstatisticasUiState>(AlunoEstatisticasUiState.Idle)
+    val estatisticasState: StateFlow<AlunoEstatisticasUiState> = _estatisticasState.asStateFlow()
+
+    private val _periodoEstatisticas = MutableStateFlow(PeriodoEstatisticasAluno.TRINTA_DIAS)
+    val periodoEstatisticas: StateFlow<PeriodoEstatisticasAluno> = _periodoEstatisticas.asStateFlow()
 
     fun carregar(alunoId: String) {
         viewModelScope.launch {
@@ -86,10 +119,72 @@ class TreinadorAlunoDetalheViewModel : ViewModel() {
                     diasTreino = diasTreino,
                     ultimoTreino = ultimoTreino
                 )
+                carregarEstatisticas(alunoId)
             } catch (e: HttpException) {
                 _uiState.value = TreinadorAlunoDetalheUiState.Error("Erro ao carregar dados do aluno")
             } catch (e: Exception) {
                 _uiState.value = TreinadorAlunoDetalheUiState.Error(e.message ?: "Erro desconhecido")
+            }
+        }
+    }
+
+    fun selecionarPeriodoEstatisticas(alunoId: String, periodo: PeriodoEstatisticasAluno) {
+        _periodoEstatisticas.value = periodo
+        carregarEstatisticas(alunoId, periodo)
+    }
+
+    fun carregarEstatisticas(alunoId: String, periodo: PeriodoEstatisticasAluno = _periodoEstatisticas.value) {
+        viewModelScope.launch {
+            _estatisticasState.value = AlunoEstatisticasUiState.Loading
+            try {
+                val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC)
+                val fim = Instant.now()
+                val inicio = fim.minus(periodo.dias.toLong(), ChronoUnit.DAYS)
+                val dataInicio = fmt.format(inicio)
+                val dataFim = fmt.format(fim)
+
+                coroutineScope {
+                    val statsDeferred = async {
+                        RetrofitClient.historicoApi.getEstatisticas(dataInicio = dataInicio, dataFim = dataFim, alunoId = alunoId)
+                    }
+                    val gruposDeferred = async {
+                        RetrofitClient.historicoApi.getGruposMusculares(dataInicio = dataInicio, dataFim = dataFim, alunoId = alunoId)
+                    }
+                    val frequentesDeferred = async {
+                        RetrofitClient.historicoApi.getExerciciosFrequentes(dataInicio = dataInicio, dataFim = dataFim, alunoId = alunoId)
+                    }
+                    val comparativoDeferred = async {
+                        RetrofitClient.historicoApi.getComparativo(semanas = periodo.semanas, alunoId = alunoId)
+                    }
+
+                    val statsResp = statsDeferred.await()
+                    val stats = statsResp.body()?.data
+                    if (stats == null) {
+                        _estatisticasState.value = AlunoEstatisticasUiState.Error("Erro ao carregar estatísticas (HTTP ${statsResp.code()})")
+                        return@coroutineScope
+                    }
+
+                    val grupos = gruposDeferred.await().body()?.data ?: emptyList()
+                    val frequentes = frequentesDeferred.await().body()?.data ?: emptyList()
+                    val comparativoResp = comparativoDeferred.await()
+                    val comparativoData = comparativoResp.body()?.data
+                    val comparativoState = when {
+                        !comparativoResp.isSuccessful || comparativoData == null ->
+                            ComparativoUiState.Error("HTTP ${comparativoResp.code()}")
+                        comparativoData.periodoAtual.sessoesConcluidas == 0 && comparativoData.periodoAnterior.sessoesConcluidas == 0 ->
+                            ComparativoUiState.SemDados
+                        else -> ComparativoUiState.Success(comparativoData)
+                    }
+
+                    _estatisticasState.value = AlunoEstatisticasUiState.Success(
+                        stats = stats,
+                        grupos = grupos,
+                        frequentes = frequentes,
+                        comparativo = comparativoState
+                    )
+                }
+            } catch (e: Exception) {
+                _estatisticasState.value = AlunoEstatisticasUiState.Error(e.message ?: "Sem conexão com a internet")
             }
         }
     }
