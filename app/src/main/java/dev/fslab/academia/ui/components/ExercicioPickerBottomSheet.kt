@@ -25,11 +25,14 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Loop
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -241,6 +244,48 @@ fun ExercicioPickerBottomSheet(
                         Text(if (filtros.emUso == false) "Sem treino" else "Em uso")
                     },
                     leadingIcon = { Icon(Icons.Filled.Bookmark, null, modifier = Modifier.size(16.dp)) },
+                    colors = chipColors()
+                )
+                // 6. Com animação
+                FilterChip(
+                    selected = filtros.comMidia == true,
+                    onClick = {
+                        val proximo = if (filtros.comMidia == true) null else true
+                        viewModel.atualizarFiltros(filtros.copy(comMidia = proximo))
+                    },
+                    label = { Text("Com animação") },
+                    leadingIcon = { Icon(Icons.Filled.PlayCircle, null, modifier = Modifier.size(16.dp)) },
+                    colors = chipColors()
+                )
+                // 7-9. Tipo de exercício
+                FilterChip(
+                    selected = filtros.tipoExercicio == TipoExercicio.REPETICAO,
+                    onClick = {
+                        val novo = if (filtros.tipoExercicio == TipoExercicio.REPETICAO) null else TipoExercicio.REPETICAO
+                        viewModel.atualizarFiltros(filtros.copy(tipoExercicio = novo))
+                    },
+                    label = { Text("Repetição") },
+                    leadingIcon = { Icon(Icons.Filled.Loop, null, modifier = Modifier.size(16.dp)) },
+                    colors = chipColors()
+                )
+                FilterChip(
+                    selected = filtros.tipoExercicio == TipoExercicio.TEMPO,
+                    onClick = {
+                        val novo = if (filtros.tipoExercicio == TipoExercicio.TEMPO) null else TipoExercicio.TEMPO
+                        viewModel.atualizarFiltros(filtros.copy(tipoExercicio = novo))
+                    },
+                    label = { Text("Tempo") },
+                    leadingIcon = { Icon(Icons.Filled.Timer, null, modifier = Modifier.size(16.dp)) },
+                    colors = chipColors()
+                )
+                FilterChip(
+                    selected = filtros.tipoExercicio == TipoExercicio.DISTANCIA,
+                    onClick = {
+                        val novo = if (filtros.tipoExercicio == TipoExercicio.DISTANCIA) null else TipoExercicio.DISTANCIA
+                        viewModel.atualizarFiltros(filtros.copy(tipoExercicio = novo))
+                    },
+                    label = { Text("Distância") },
+                    leadingIcon = { Icon(Icons.Filled.Straighten, null, modifier = Modifier.size(16.dp)) },
                     colors = chipColors()
                 )
             }
