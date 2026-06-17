@@ -8,6 +8,7 @@ import dev.fslab.academia.model.CriarExercicioRequest
 import dev.fslab.academia.model.EscopoExercicio
 import dev.fslab.academia.model.ExercicioData
 import dev.fslab.academia.model.GrupoMuscular
+import dev.fslab.academia.model.TipoExercicio
 import dev.fslab.academia.network.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,7 +63,8 @@ data class ExercicioFiltros(
     val aparelhoIds: Set<String> = emptySet(),
     val escopo: EscopoExercicio = EscopoExercicio.TODOS,
     val emUso: Boolean? = null,
-    val comMidia: Boolean? = null
+    val comMidia: Boolean? = null,
+    val tipoExercicio: TipoExercicio? = null
 )
 
 class ExercicioViewModel : ViewModel() {
@@ -99,6 +101,7 @@ class ExercicioViewModel : ViewModel() {
                     limite = 20,
                     nome = f.busca.takeIf(String::isNotBlank),
                     grupoMuscular = f.grupoMuscular?.apiValue,
+                    tipoExercicio = f.tipoExercicio?.apiValue,
                     escopo = f.escopo.apiValue,
                     emUso = f.emUso,
                     comMidia = f.comMidia,
