@@ -282,7 +282,7 @@ fun TreinoFormScreen(
                             if (nomeErro != null) nomeErro = null
                             if (erroGeral != null) erroGeral = null
                         },
-                        label = { Text("Nome do treino") },
+                        label = { Text("Nome do treino *") },
                         placeholder = { Text("Ex: Treino A - Peito e Tríceps") },
                         singleLine = true,
                         isError = nomeErro != null,
@@ -793,7 +793,7 @@ private fun DialogoConfigurarItem(
                 OutlinedTextField(
                     value = seriesText,
                     onValueChange = { if (it.all(Char::isDigit) || it.isEmpty()) seriesText = it },
-                    label = { Text("Séries") },
+                    label = { Text("Séries *") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -803,7 +803,7 @@ private fun DialogoConfigurarItem(
                     eTempo -> OutlinedTextField(
                         value = duracaoText,
                         onValueChange = { if (it.all(Char::isDigit) || it.isEmpty()) duracaoText = it },
-                        label = { Text("Duração sugerida (segundos)") },
+                        label = { Text("Duração sugerida (segundos) *") },
                         placeholder = { Text("Ex: 45") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -813,7 +813,7 @@ private fun DialogoConfigurarItem(
                     eDistancia -> OutlinedTextField(
                         value = distanciaText,
                         onValueChange = { if (it.all(Char::isDigit) || it.isEmpty()) distanciaText = it },
-                        label = { Text("Distância sugerida (metros)") },
+                        label = { Text("Distância sugerida (metros) *") },
                         placeholder = { Text("Ex: 5000") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -823,7 +823,7 @@ private fun DialogoConfigurarItem(
                     else -> OutlinedTextField(
                         value = repsText,
                         onValueChange = { repsText = it },
-                        label = { Text("Repetições (ex: 8-12)") },
+                        label = { Text("Repetições (ex: 8-12) *") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = camposCoresTreino()
@@ -853,7 +853,7 @@ private fun DialogoConfigurarItem(
                 OutlinedTextField(
                     value = descansoText,
                     onValueChange = { if (it.all(Char::isDigit) || it.isEmpty()) descansoText = it },
-                    label = { Text("Descanso (segundos)") },
+                    label = { Text("Descanso (segundos) *") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -873,8 +873,8 @@ private fun DialogoConfigurarItem(
                     when {
                         series == null || series < 1 || series > 20 -> erro = "Séries entre 1 e 20"
                         !eTempo && !eDistancia && repsText.isBlank() -> erro = "Informe as repetições"
-                        eTempo && duracaoText.isNotBlank() && (duracao == null || duracao < 1) -> erro = "Duração inválida"
-                        eDistancia && distanciaText.isNotBlank() && (distancia == null || distancia < 1) -> erro = "Distância inválida"
+                        eTempo && (duracaoText.isBlank() || duracao == null || duracao < 1) -> erro = "Informe a duração em segundos"
+                        eDistancia && (distanciaText.isBlank() || distancia == null || distancia < 1) -> erro = "Informe a distância em metros"
                         descanso == null || descanso < 0 || descanso > 3600 -> erro = "Descanso entre 0 e 3600s"
                         cargaText.isNotBlank() && (carga == null || carga <= 0) -> erro = "Carga deve ser positiva"
                         else -> onConfirmar(

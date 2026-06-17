@@ -238,7 +238,7 @@ fun ExercicioFormScreen(
                             if (nomeErro != null) nomeErro = null
                             if (erroGeral != null) erroGeral = null
                         },
-                        label = { Text("Nome do exercício") },
+                        label = { Text("Nome do exercício *") },
                         placeholder = { Text("Ex: Supino reto") },
                         singleLine = true,
                         isError = nomeErro != null,
@@ -291,7 +291,7 @@ fun ExercicioFormScreen(
 
                 item {
                     SecaoCabecalho(
-                        titulo = "Músculos",
+                        titulo = "Músculos *",
                         subtitulo = "Pelo menos um músculo é obrigatório",
                         onAdicionar = { mostrarMusculos = true },
                         contagem = musculosSelecionados.size,
