@@ -50,6 +50,7 @@ import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.TreinadorNavigationBar
 import dev.fslab.academia.ui.components.treinadorNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.TreinoListUiState
 import dev.fslab.academia.ui.viewmodel.TreinoViewModel
 
@@ -61,6 +62,7 @@ fun TreinadorTreinosScreen(
     viewModel: TreinoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -187,6 +189,7 @@ fun TreinadorTreinosScreen(
 @Composable
 private fun TemplateCard(treino: TreinoData, onClick: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val descricao = treino.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição"
 
     ElevatedCard(
@@ -252,6 +255,7 @@ private fun TemplateCard(treino: TreinoData, onClick: () -> Unit) {
 @Composable
 private fun TreinoClienteCard(treino: TreinoData, onClick: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val descricao = treino.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição"
 
     ElevatedCard(
@@ -302,6 +306,7 @@ private fun TreinoClienteCard(treino: TreinoData, onClick: () -> Unit) {
 @Composable
 private fun CardErroTemplate(mensagem: String, onTentarNovamente: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface)
@@ -331,6 +336,7 @@ private fun CardErroTemplate(mensagem: String, onTentarNovamente: () -> Unit) {
 @Composable
 private fun CardVazioTemplate() {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface)
@@ -357,6 +363,7 @@ private fun CardVazioTemplate() {
 @Composable
 private fun CardVazioTreinoCliente() {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface)

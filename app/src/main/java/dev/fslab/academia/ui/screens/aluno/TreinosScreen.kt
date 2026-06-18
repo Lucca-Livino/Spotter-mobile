@@ -76,6 +76,7 @@ import dev.fslab.academia.ui.components.MAIS_ROUTE
 import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.TreinoFiltros
 import dev.fslab.academia.ui.viewmodel.TreinoListUiState
 import dev.fslab.academia.ui.viewmodel.TreinoReorderUiState
@@ -94,6 +95,7 @@ fun TreinosScreen(
     viewModel: TreinoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
     val filtros by viewModel.filtros.collectAsState()
     val reorderState by viewModel.reorderState.collectAsState()
@@ -380,6 +382,7 @@ private fun BarraFiltrosTreino(
     onLimpar: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val scroll = rememberScrollState()
     val temFiltros = filtros.diasSemana.isNotEmpty() ||
         filtros.somenteComExercicios ||
@@ -448,6 +451,7 @@ private fun formatarUltimaSessao(iso: String?): String? {
 @Composable
 private fun TreinoCard(treino: TreinoData, onClick: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val descricao = treino.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição cadastrada"
     val dias = treino.diasSemana.orEmpty().mapNotNull(DiaSemana::fromApi)
     val ultimaSessao = formatarUltimaSessao(treino.ultimaSessaoEm)
@@ -567,6 +571,7 @@ private fun TreinoReorderCard(
     dragHandle: @Composable () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -621,6 +626,7 @@ private fun TreinoReorderCard(
 @Composable
 private fun CardErroTreino(mensagem: String, onTentarNovamente: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface)
@@ -650,6 +656,7 @@ private fun CardErroTreino(mensagem: String, onTentarNovamente: () -> Unit) {
 @Composable
 private fun CardVazioTreino() {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface)

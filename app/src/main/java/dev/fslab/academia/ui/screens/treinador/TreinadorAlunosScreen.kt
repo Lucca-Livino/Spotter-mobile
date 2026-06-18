@@ -52,6 +52,7 @@ import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.TreinadorNavigationBar
 import dev.fslab.academia.ui.components.treinadorNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.TreinadorAlunosUiState
 import dev.fslab.academia.ui.viewmodel.TreinadorAlunosViewModel
 import dev.fslab.academia.ui.viewmodel.TreinadorClienteUi
@@ -69,6 +70,7 @@ fun TreinadorAlunosScreen(
     autoLoad: Boolean = true
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     var navSelected by remember { mutableIntStateOf(3) } // Clientes is index 3
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -111,7 +113,7 @@ fun TreinadorAlunosScreen(
                 .padding(innerPadding)
         ) {
             // Search Bar
-            Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
+            Box(modifier = Modifier.padding(horizontal = dimens.screenPaddingH, vertical = 12.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChange(it) },
@@ -138,14 +140,14 @@ fun TreinadorAlunosScreen(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
                     color = colors.textSecondary,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = dimens.screenPaddingH, vertical = 8.dp)
                 )
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp),
+                        .padding(horizontal = dimens.screenPaddingH),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // "Todos" Button
@@ -189,7 +191,7 @@ fun TreinadorAlunosScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                            contentPadding = PaddingValues(horizontal = dimens.screenPaddingH, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             item {
@@ -224,6 +226,7 @@ private fun FilterChip(
     onClick: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50.dp))
@@ -278,6 +281,7 @@ private fun ClienteCard(
     onClick: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Column(
         modifier = Modifier
@@ -370,6 +374,7 @@ private fun ClienteCard(
 @Composable
 private fun AvatarCliente(nome: String, size: androidx.compose.ui.unit.Dp) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val iniciais = nome.split(" ").take(2).joinToString("") { it.firstOrNull()?.uppercase() ?: "" }
 
     Box(
@@ -392,6 +397,7 @@ private fun AvatarCliente(nome: String, size: androidx.compose.ui.unit.Dp) {
 @Composable
 private fun EmptyState() {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Column(
         modifier = Modifier
             .fillMaxSize()

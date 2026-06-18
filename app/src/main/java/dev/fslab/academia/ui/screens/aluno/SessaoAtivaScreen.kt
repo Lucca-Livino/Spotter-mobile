@@ -97,6 +97,7 @@ import dev.fslab.academia.model.TipoExercicio
 import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.AnimacaoPlayer
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.SessaoSeriesUiState
 import dev.fslab.academia.ui.viewmodel.SessaoUiState
 import dev.fslab.academia.ui.viewmodel.SessaoViewModel
@@ -153,6 +154,7 @@ private fun ExecucaoSessao(
     onBack: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val seriesState by viewModel.seriesState.collectAsState()
     val maxCargaPorExercicio by viewModel.maxCargaPorExercicio.collectAsState()
 
@@ -605,7 +607,7 @@ private fun ExecucaoSessao(
                         )
                         Text(
                             "$seriesContagemLocal séries",
-                            modifier = Modifier.padding(horizontal = 20.dp),
+                            modifier = Modifier.padding(horizontal = dimens.screenPaddingH),
                             style = MaterialTheme.typography.labelMedium,
                             color = colors.textSecondary,
                             fontWeight = FontWeight.SemiBold
@@ -731,6 +733,7 @@ private fun ExercicioGifSection(
     nomExercicio: String
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Box(
         modifier = Modifier
@@ -767,6 +770,7 @@ private fun ExercicioHeaderSection(
     onAvancar: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
         // Navegação
@@ -881,6 +885,7 @@ private fun SerieStepperRow(
     onPular: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     var expandido by remember { mutableStateOf(true) }
     LaunchedEffect(status) { if (status == "CONCLUIDA" || status == "PULADA") expandido = false }
@@ -1071,6 +1076,7 @@ private fun StepperInput(
     onMais: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Column(
         modifier = modifier
@@ -1144,6 +1150,7 @@ private fun DescansoOverlay(
     onPular: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val progresso = if (tempoTotal > 0) (segundosRestantes.toFloat() / tempoTotal).coerceIn(0f, 1f) else 0f
 
     Box(
@@ -1225,6 +1232,7 @@ private fun DescansoOverlay(
 @Composable
 private fun LoadingPlaceholder() {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Box(
         modifier = Modifier.fillMaxSize().background(colors.background),
         contentAlignment = Alignment.Center
@@ -1242,6 +1250,7 @@ private fun LoadingPlaceholder() {
 @Composable
 private fun SemSessaoAtivaConteudo(onBack: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Box(
         modifier = Modifier.fillMaxSize().background(colors.background),
         contentAlignment = Alignment.Center
@@ -1265,6 +1274,7 @@ private fun SemSessaoAtivaConteudo(onBack: () -> Unit) {
 @Composable
 private fun ErroConteudo(message: String, onBack: () -> Unit, onRetry: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Box(modifier = Modifier.fillMaxSize().background(colors.background), contentAlignment = Alignment.Center) {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Falha ao carregar sessão", color = colors.textPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -1287,6 +1297,7 @@ private fun ResumoSessaoConteudo(
     onVoltar: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Scaffold(
         containerColor = colors.background,
@@ -1324,7 +1335,7 @@ private fun ResumoSessaoConteudo(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(colors.featureOrange.copy(alpha = 0.15f))
                                 .border(1.dp, colors.featureOrange.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                                .padding(horizontal = dimens.screenPaddingH, vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -1427,6 +1438,7 @@ private fun ResumoItem(
     icone: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icone, null, tint = colors.textSecondary, modifier = Modifier.size(16.dp))
@@ -1457,6 +1469,7 @@ private fun SerieTempoRow(
     onPular: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val progresso = if (metaSegundos != null && metaSegundos > 0)
         (segundos.toFloat() / metaSegundos).coerceIn(0f, 1f) else 0f
     val metaBatida = metaSegundos != null && segundos >= metaSegundos
@@ -1730,6 +1743,7 @@ private fun SerieDistanciaRow(
     onPular: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val isIdle = status == "PENDENTE" && !timerAtivo
 
     var expandido by remember { mutableStateOf(true) }
@@ -1964,6 +1978,7 @@ private fun SerieDistanciaRow(
 @Composable
 private fun MetaDistanciaStepper(metaMetros: Int, onAlterarMeta: (Int) -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(20.dp)
@@ -2007,6 +2022,7 @@ private fun MetaDistanciaStepper(metaMetros: Int, onAlterarMeta: (Int) -> Unit) 
 @Composable
 private fun MetaTempoStepper(metaSegundos: Int, onAlterarMeta: (Int) -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(20.dp)
@@ -2058,6 +2074,7 @@ private fun TimerCirculo(
     tamanho: Int = 140
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Box(contentAlignment = Alignment.Center) {
         if (metaSegundos != null) {
             CircularProgressIndicator(

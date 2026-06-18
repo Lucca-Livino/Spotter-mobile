@@ -72,6 +72,7 @@ import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.DiaSemanaSelectionBottomSheet
 import dev.fslab.academia.ui.components.ExercicioPickerBottomSheet
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.TreinoDetalheUiState
 import dev.fslab.academia.ui.viewmodel.TreinoExercicioPatchUpdate
 import dev.fslab.academia.ui.viewmodel.TreinoFormItemRascunho
@@ -116,6 +117,7 @@ fun TreinoFormScreen(
     viewModel: TreinoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val ehEdicao = treinoId != null
 
     val detalheState by viewModel.detalheState.collectAsState()
@@ -720,6 +722,7 @@ private fun BotaoSelecionarDias(
     onAbrir: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val resumo = if (dias.isEmpty()) "Toque para selecionar" else
         DiaSemana.values().filter { it in dias }.joinToString(" • ") { it.curto }
     Card(
@@ -777,6 +780,7 @@ private fun ItemTreinoCard(
     onRemover: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val eTempo = item.tipoExercicio == TipoExercicio.TEMPO
     val eDistancia = item.tipoExercicio == TipoExercicio.DISTANCIA
     val corTipo = when {
@@ -862,6 +866,7 @@ private fun DialogoConfigurarItem(
     onCancelar: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val eTempo = tipoExercicio == TipoExercicio.TEMPO
     val eDistancia = tipoExercicio == TipoExercicio.DISTANCIA
     var seriesText by remember { mutableStateOf(inicial?.series?.toString() ?: "3") }

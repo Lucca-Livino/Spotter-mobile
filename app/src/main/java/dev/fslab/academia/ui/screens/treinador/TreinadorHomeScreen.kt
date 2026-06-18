@@ -55,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.fslab.academia.ui.components.TreinadorNavigationBar
 import dev.fslab.academia.ui.components.treinadorNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.model.SolicitacaoData
 import dev.fslab.academia.ui.viewmodel.TreinadorClienteUi
 import dev.fslab.academia.ui.viewmodel.TreinadorHomeUiState
@@ -80,6 +81,7 @@ fun TreinadorHomeScreen(
     autoLoad: Boolean = true
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     var navSelected by remember { mutableIntStateOf(0) }
     val uiState by viewModel.uiState.collectAsState()
 
@@ -238,7 +240,7 @@ fun TreinadorHomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimens.spaceLg))
 
             // ── Treinam hoje ──────────────────────────────────────────────
             if (clientesHoje.isNotEmpty()) {
@@ -248,14 +250,14 @@ fun TreinadorHomeScreen(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
                     color = colors.textSecondary,
-                    modifier = Modifier.padding(horizontal = 20.dp)
+                    modifier = Modifier.padding(horizontal = dimens.screenPaddingH)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp),
+                        .padding(horizontal = dimens.screenPaddingH),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     clientesHoje.forEach { cliente ->
@@ -265,7 +267,7 @@ fun TreinadorHomeScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimens.spaceLg))
             }
 
             // ── Divisor ───────────────────────────────────────────────────
@@ -273,17 +275,17 @@ fun TreinadorHomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = dimens.screenPaddingH)
                     .background(colors.inputBorder)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimens.spaceLg))
 
             // ── Meus Clientes ─────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = dimens.screenPaddingH),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -355,14 +357,14 @@ fun TreinadorHomeScreen(
                         text = currentState.message,
                         color = colors.error,
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(horizontal = 20.dp)
+                        modifier = Modifier.padding(horizontal = dimens.screenPaddingH)
                     )
                 }
                 is TreinadorHomeUiState.Empty -> {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
+                            .padding(horizontal = dimens.screenPaddingH)
                             .clip(RoundedCornerShape(16.dp))
                             .background(colors.surface)
                             .border(1.dp, colors.inputBorder, RoundedCornerShape(16.dp))
@@ -380,7 +382,7 @@ fun TreinadorHomeScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
+                            .padding(horizontal = dimens.screenPaddingH),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         clientes.take(4).forEach { cliente ->
@@ -402,16 +404,16 @@ fun TreinadorHomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .padding(horizontal = 20.dp)
+                        .padding(horizontal = dimens.screenPaddingH)
                         .background(colors.inputBorder)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimens.spaceLg))
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
+                        .padding(horizontal = dimens.screenPaddingH),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
@@ -447,7 +449,7 @@ fun TreinadorHomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
+                        .padding(horizontal = dimens.screenPaddingH),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     solicitacoes.forEach { solicitacao ->

@@ -80,6 +80,7 @@ import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.AparelhoSelectionBottomSheet
 import dev.fslab.academia.ui.components.MusculoSelectionBottomSheet
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.ExercicioDetalheUiState
 import dev.fslab.academia.ui.viewmodel.ExercicioSalvarUiState
 import dev.fslab.academia.ui.viewmodel.ExercicioViewModel
@@ -105,6 +106,7 @@ fun ExercicioFormScreen(
     viewModel: ExercicioViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val context = LocalContext.current
     val ehEdicao = exercicioId != null
 
@@ -429,6 +431,7 @@ fun ExercicioFormScreen(
 
     if (mostrarAvisoTipo && tipoParaMudar != null) {
         val colors = LocalAcademiaColors.current
+        val dimens = LocalDimens.current
         AlertDialog(
             onDismissRequest = { mostrarAvisoTipo = false; tipoParaMudar = null },
             containerColor = colors.surface,
@@ -551,6 +554,7 @@ private fun BlocoAnimacao(
     onRemover: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val temAnimacaoNova = animacao != null
     val temAnimacaoExistente = !temAnimacaoNova && !animacaoUrlAtual.isNullOrBlank()
 
@@ -636,6 +640,7 @@ private fun SecaoCabecalho(
     erro: String?
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -695,6 +700,7 @@ private fun ItemMusculoSelecionado(
     onRemover: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface),
@@ -764,6 +770,7 @@ private fun ItemAparelhoSelecionado(
     onRemover: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface),
@@ -829,6 +836,7 @@ private fun SeletorTipoExercicio(
     onSelecionar: (TipoExercicio) -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -902,6 +910,7 @@ private fun TipoOpcao(
     onClick: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val bgColor = if (selecionado) corAtiva.copy(alpha = 0.15f) else colors.background
     val borderColor = if (selecionado) corAtiva else colors.lightGray.copy(alpha = 0.5f)
     val textColor = if (selecionado) corAtiva else colors.textSecondary

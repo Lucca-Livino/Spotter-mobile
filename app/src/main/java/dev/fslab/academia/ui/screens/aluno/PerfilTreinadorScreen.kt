@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.PerfilTreinadorUiState
 import dev.fslab.academia.ui.viewmodel.PerfilTreinadorViewModel
 import dev.fslab.academia.ui.viewmodel.SolicitacaoEnvioState
@@ -37,6 +38,7 @@ fun PerfilTreinadorScreen(
     viewModel: PerfilTreinadorViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
     val envioState by viewModel.envioState.collectAsState()
 
@@ -259,6 +261,7 @@ fun PerfilTreinadorScreen(
 @Composable
 private fun SectionLabel(text: String) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Text(
         text = text.uppercase(),
         style = MaterialTheme.typography.labelSmall,

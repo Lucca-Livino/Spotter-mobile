@@ -49,6 +49,7 @@ import dev.fslab.academia.ui.components.MAIS_ROUTE
 import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.AparelhoUiState
 import dev.fslab.academia.ui.viewmodel.AparelhoViewModel
 
@@ -59,6 +60,7 @@ fun AparelhosScreen(
     viewModel: AparelhoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
 
     var busca by remember { mutableStateOf("") }
@@ -176,6 +178,7 @@ fun AparelhosScreen(
 @Composable
 private fun AparelhoCard(aparelho: AparelhoData) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),

@@ -25,6 +25,7 @@ import dev.fslab.academia.model.MensagemConversaData
 import dev.fslab.academia.model.UserTipo
 import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.ChatEnviarUiState
 import dev.fslab.academia.ui.viewmodel.ChatMensagensUiState
 import dev.fslab.academia.ui.viewmodel.ChatViewModel
@@ -54,6 +55,7 @@ fun ChatDetailScreen(
     }
 
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Scaffold(
         topBar = {
@@ -90,6 +92,7 @@ fun ChatConversationBody(
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val mensagensState by viewModel.mensagensState.collectAsState()
     val enviarState by viewModel.enviarState.collectAsState()
     val listState = rememberLazyListState()
@@ -202,6 +205,7 @@ private fun MensagemItem(
     souRemetente: Boolean
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),

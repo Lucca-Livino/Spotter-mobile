@@ -63,6 +63,7 @@ import dev.fslab.academia.model.TipoExercicio
 import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.AnimacaoPlayer
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.ExercicioDeletarUiState
 import dev.fslab.academia.ui.viewmodel.ExercicioDetalheUiState
 import dev.fslab.academia.ui.viewmodel.ExercicioViewModel
@@ -83,6 +84,7 @@ fun ExercicioDetalheScreen(
     histViewModel: HistoricoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val detalheState by viewModel.detalheState.collectAsState()
     val deletarState by viewModel.deletarState.collectAsState()
     val recordeState by histViewModel.recordeState.collectAsState()
@@ -271,6 +273,7 @@ private fun DetalheConteudo(
     onExcluir: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val primarios = exercicio.musculos.filter { it.tipoAtivacao == "PRIMARIO" }
     val secundarios = exercicio.musculos.filter { it.tipoAtivacao == "SECUNDARIO" }
 
@@ -424,6 +427,7 @@ private fun DetalheConteudo(
 @Composable
 private fun AnimacaoPreview(url: String) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface),
@@ -452,6 +456,7 @@ private fun CardEstatisticas(
     totalAparelhos: Int
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface),
@@ -471,6 +476,7 @@ private fun CardEstatisticas(
 @Composable
 private fun Estatistica(rotulo: String, valor: String) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             valor,
@@ -493,6 +499,7 @@ private fun SecaoTitulo(
     contagem: Int
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -520,6 +527,7 @@ private fun SecaoTitulo(
 @Composable
 private fun ItemMusculo(musculo: ExercicioMusculoData, primario: Boolean) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface),
@@ -567,6 +575,7 @@ private fun ItemMusculo(musculo: ExercicioMusculoData, primario: Boolean) {
 @Composable
 private fun ItemAparelho(aparelho: ExercicioAparelhoData) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface),

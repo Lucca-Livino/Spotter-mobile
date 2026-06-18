@@ -76,6 +76,7 @@ import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.AcademiaTheme
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.AlunoVinculoState
 import dev.fslab.academia.ui.viewmodel.HomeUiState
 import dev.fslab.academia.ui.viewmodel.HomeViewModel
@@ -138,6 +139,7 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val context = LocalContext.current
     var mostrarMaisMenu by remember { mutableStateOf(false) }
     val homeUiState by homeViewModel.uiState.collectAsState()
@@ -187,9 +189,9 @@ fun HomeScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = dimens.screenPaddingH)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimens.spaceLg))
 
             // ── Header: avatar + saudação + streak ────────────────────────────
             Row(

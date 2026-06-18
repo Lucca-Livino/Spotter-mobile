@@ -29,6 +29,7 @@ import dev.fslab.academia.ui.components.TreinadorNavigationBar
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.components.treinadorNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.ChatViewModel
 import dev.fslab.academia.ui.viewmodel.ConversaIniciarUiState
 import dev.fslab.academia.ui.viewmodel.ConversaListUiState
@@ -47,6 +48,7 @@ fun ChatScreen(
     chatViewModel: ChatViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     var mostrarMaisMenu by remember { mutableStateOf(false) }
 
     val listState by viewModel.uiState.collectAsState()
@@ -151,11 +153,12 @@ private fun TreinadorChatLista(
     onAbrir: (String) -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = dimens.screenPaddingH)
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         
@@ -238,6 +241,7 @@ private fun ConversaClienteItem(
     onAbrir: (String) -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val hasUnread = cliente.mensagensNaoLidas > 0
 
     Row(

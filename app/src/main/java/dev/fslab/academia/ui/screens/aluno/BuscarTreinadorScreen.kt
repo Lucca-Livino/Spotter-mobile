@@ -25,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import dev.fslab.academia.model.TreinadorData
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.BuscarTreinadorUiState
 import dev.fslab.academia.ui.viewmodel.BuscarTreinadorViewModel
 
@@ -37,6 +38,7 @@ fun BuscarTreinadorScreen(
     viewModel: BuscarTreinadorViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
     val search by viewModel.search.collectAsState()
 
@@ -158,6 +160,7 @@ fun BuscarTreinadorScreen(
 @Composable
 private fun TreinadorCard(treinador: TreinadorData, onClick: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val especialidades = treinador.especializacao.split(",").map { it.trim() }.filter { it.isNotBlank() }
 
     Row(

@@ -48,6 +48,7 @@ import dev.fslab.academia.model.TipoExercicio
 import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.theme.AcademiaColors
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.HistoricoViewModel
 import dev.fslab.academia.ui.viewmodel.SessaoDetalheUiState
 import java.time.Instant
@@ -61,6 +62,7 @@ fun SessaoDetalheScreen(
     viewModel: HistoricoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val state by viewModel.sessaoDetalheState.collectAsState()
 
     LaunchedEffect(sessaoId) {

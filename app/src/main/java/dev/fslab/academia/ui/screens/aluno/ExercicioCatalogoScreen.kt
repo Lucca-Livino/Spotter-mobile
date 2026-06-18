@@ -83,6 +83,7 @@ import dev.fslab.academia.ui.components.MapaCorporal
 import dev.fslab.academia.ui.components.MusculoSelectionBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.ExercicioFiltros
 import dev.fslab.academia.ui.viewmodel.ExercicioListUiState
 import dev.fslab.academia.ui.viewmodel.ExercicioViewModel
@@ -96,6 +97,7 @@ fun ExercicioCatalogoScreen(
     viewModel: ExercicioViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
     val filtros by viewModel.filtros.collectAsState()
 
@@ -315,6 +317,7 @@ private fun BarraFiltros(
     onLimpar: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val scroll = rememberScrollState()
     val temFiltros = filtros.grupoMuscular != null ||
         filtros.musculoIds.isNotEmpty() ||
@@ -437,6 +440,7 @@ private fun BarraFiltros(
 @Composable
 private fun academiaFilterChipColors(): androidx.compose.material3.SelectableChipColors {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     return FilterChipDefaults.filterChipColors(
         containerColor = colors.surface,
         labelColor = colors.textPrimary,
@@ -453,6 +457,7 @@ private fun ExercicioCard(
     onClick: () -> Unit = {}
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val descricao = exercicio.descricao?.takeIf { it.isNotBlank() } ?: "Sem descrição cadastrada"
     val primarios = exercicio.musculos.count { it.tipoAtivacao == "PRIMARIO" }
 
@@ -553,6 +558,7 @@ private fun ExercicioCard(
 @Composable
 private fun MusculoChip(musculo: ExercicioMusculoData) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val ehPrimario = musculo.tipoAtivacao == "PRIMARIO"
     SuggestionChip(
         onClick = {},
@@ -574,6 +580,7 @@ private fun MusculoChip(musculo: ExercicioMusculoData) {
 @Composable
 private fun CardErro(mensagem: String, onTentarNovamente: () -> Unit) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface)
@@ -603,6 +610,7 @@ private fun CardErro(mensagem: String, onTentarNovamente: () -> Unit) {
 @Composable
 private fun CardVazio() {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colors.surface)

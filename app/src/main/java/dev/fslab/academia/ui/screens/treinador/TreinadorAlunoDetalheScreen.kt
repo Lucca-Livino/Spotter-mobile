@@ -62,6 +62,7 @@ import dev.fslab.academia.ui.components.GruposMusculareSection
 import dev.fslab.academia.ui.components.SecaoEvolucaoPeriodo
 import dev.fslab.academia.ui.components.StatsSection
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.AlunoEstatisticasUiState
 import dev.fslab.academia.ui.viewmodel.DesvincularAlunoState
 import dev.fslab.academia.ui.viewmodel.PeriodoEstatisticasAluno
@@ -88,6 +89,7 @@ fun TreinadorAlunoDetalheScreen(
     autoLoad: Boolean = true
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
     val deletarState by treinoViewModel.deletarState.collectAsState()
     val desvincularState by viewModel.desvincularState.collectAsState()
@@ -278,6 +280,7 @@ private fun AlunoDetalheContent(
     onSelecionarPeriodoEstatisticas: (PeriodoEstatisticasAluno) -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val hoje = LocalDate.now()
     val diaHojeIdx = hoje.dayOfWeek.value % 7
 
@@ -505,6 +508,7 @@ private fun EstatisticasAlunoSection(
     onSelecionarPeriodo: (PeriodoEstatisticasAluno) -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Insights, null, tint = colors.primary, modifier = Modifier.size(16.dp))
@@ -571,6 +575,7 @@ private fun EstatisticasAlunoSection(
 @Composable
 private fun StatItem(value: String, label: String) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = colors.primary)
         Text(text = label, fontSize = 10.sp, color = colors.textSecondary)
@@ -583,6 +588,7 @@ private fun TreinoCard(
     onExcluir: () -> Unit
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -619,6 +625,7 @@ private fun TreinoCard(
 @Composable
 private fun AvatarCliente(nome: String, size: androidx.compose.ui.unit.Dp) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val iniciais = nome.split(" ").take(2).joinToString("") { it.firstOrNull()?.uppercase() ?: "" }
 
     Box(

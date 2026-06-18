@@ -62,6 +62,7 @@ import dev.fslab.academia.ui.components.StatsSection
 import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.theme.AcademiaColors
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
+import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.HistoricoUiState
 import dev.fslab.academia.ui.viewmodel.HistoricoViewModel
 import dev.fslab.academia.ui.viewmodel.PeriodoFiltro
@@ -83,6 +84,7 @@ fun HistoricoScreen(
     viewModel: HistoricoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
     val uiState by viewModel.uiState.collectAsState()
     val carregarMaisState by viewModel.carregarMaisState.collectAsState()
     val periodoFiltro by viewModel.periodoFiltro.collectAsState()
