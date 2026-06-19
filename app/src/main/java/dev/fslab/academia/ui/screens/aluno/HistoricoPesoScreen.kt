@@ -3,6 +3,8 @@ package dev.fslab.academia.ui.screens.aluno
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,8 +55,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.fslab.academia.model.HistoricoPesoData
 import dev.fslab.academia.model.HistoricoPesoEntrada
@@ -354,10 +359,16 @@ private fun MetricaItem(label: String, valor: String, destaque: Boolean = false,
 
 @Composable
 private fun GraficoPeso(entradas: List<HistoricoPesoEntrada>, colors: AcademiaColors) {
-    val pontos = entradas.sortedBy { it.dataAvaliacao }.map { it.pesoKg.toFloat() }
-    val minPeso = (pontos.minOrNull() ?: 0f) - 1f
-    val maxPeso = (pontos.maxOrNull() ?: 0f) + 1f
-    val amplitude = (maxPeso - minPeso).coerceAtLeast(0.1f)
+    val entradasOrdenadas = remember(entradas) { entradas.sortedBy { it.dataAvaliacao } }
+    val pontos = remember(entradasOrdenadas) { entradasOrdenadas.map { it.pesoKg.toFloat() } }
+
+    if (pontos.size < 2) return
+
+    val minPeso = (pontos.minOrNull() ?: 0f)
+    val maxPeso = (pontos.maxOrNull() ?: 0f)
+    val range = (maxPeso - minPeso).coerceAtLeast(0.1f)
+
+    var selectedIndex by remember(pontos) { mutableIntStateOf(pontos.lastIndex) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -365,39 +376,77 @@ private fun GraficoPeso(entradas: List<HistoricoPesoEntrada>, colors: AcademiaCo
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Evolução do Peso", color = colors.textPrimary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Evolução do Peso",
+                color = colors.textPrimary,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
             Spacer(Modifier.height(12.dp))
-            Canvas(modifier = Modifier.fillMaxWidth().height(140.dp)) {
+
+            fun indiceMaisProximo(offsetX: Float, canvasWidth: Float): Int {
+                if (pontos.size <= 1) return 0
+                return pontos.indices.minByOrNull { i ->
+                    val px = if (pontos.size > 1) i * canvasWidth / (pontos.size - 1) else canvasWidth / 2f
+                    kotlin.math.abs(offsetX - px)
+                } ?: 0
+            }
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .pointerInput(pontos) {
+                        detectTapGestures { offset ->
+                            selectedIndex = indiceMaisProximo(offset.x, size.width.toFloat())
+                        }
+                    }
+                    .pointerInput(pontos) {
+                        detectHorizontalDragGestures { _, dragAmount ->
+                            val w = size.width.toFloat()
+                            if (w > 0 && pontos.size > 1) {
+                                val step = w / (pontos.size - 1)
+                                val newX = (selectedIndex * step + dragAmount).coerceIn(0f, w)
+                                selectedIndex = indiceMaisProximo(newX, w)
+                            }
+                        }
+                    }
+            ) {
                 val w = size.width
                 val h = size.height
-                val step = if (pontos.size > 1) w / (pontos.size - 1) else w
+                val padTop = 20f
+                val padBottom = 20f
+                val chartH = h - padTop - padBottom
+
+                fun xAt(i: Int): Float = if (pontos.size > 1) i * w / (pontos.size - 1) else w / 2f
+                fun yAt(v: Float): Float = padTop + chartH * (1f - (v - minPeso) / range)
 
                 val pathLine = Path()
                 val pathFill = Path()
 
                 pontos.forEachIndexed { i, valor ->
-                    val x = i * step
-                    val y = h - ((valor - minPeso) / amplitude) * h
+                    val x = xAt(i)
+                    val y = yAt(valor)
                     if (i == 0) {
                         pathLine.moveTo(x, y)
-                        pathFill.moveTo(x, h)
+                        pathFill.moveTo(x, h - padBottom)
                         pathFill.lineTo(x, y)
                     } else {
-                        val prevX = (i - 1) * step
-                        val prevY = h - ((pontos[i - 1] - minPeso) / amplitude) * h
+                        val prevX = xAt(i - 1)
+                        val prevY = yAt(pontos[i - 1])
                         val cx = (prevX + x) / 2
                         pathLine.cubicTo(cx, prevY, cx, y, x, y)
                         pathFill.cubicTo(cx, prevY, cx, y, x, y)
                     }
                 }
-                pathFill.lineTo((pontos.size - 1) * step, h)
+                pathFill.lineTo(xAt(pontos.lastIndex), h - padBottom)
                 pathFill.close()
 
                 drawPath(
                     path = pathFill,
                     brush = Brush.verticalGradient(
                         colors = listOf(colors.primary.copy(alpha = 0.25f), colors.primary.copy(alpha = 0.02f)),
-                        startY = 0f, endY = h
+                        startY = padTop, endY = h - padBottom
                     )
                 )
                 drawPath(
@@ -405,19 +454,44 @@ private fun GraficoPeso(entradas: List<HistoricoPesoEntrada>, colors: AcademiaCo
                     color = colors.primary,
                     style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
-                // Pontos
+
                 pontos.forEachIndexed { i, valor ->
-                    val x = i * step
-                    val y = h - ((valor - minPeso) / amplitude) * h
-                    drawCircle(color = colors.surface, radius = 5.dp.toPx(), center = Offset(x, y))
-                    drawCircle(color = colors.primary, radius = 3.5f.dp.toPx(), center = Offset(x, y))
+                    val x = xAt(i)
+                    val y = yAt(valor)
+                    if (i == selectedIndex) {
+                        drawLine(
+                            color = colors.primary.copy(alpha = 0.3f),
+                            start = Offset(x, padTop),
+                            end = Offset(x, h - padBottom),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                        drawCircle(color = colors.primary, radius = 6.dp.toPx(), center = Offset(x, y))
+                        drawCircle(color = colors.surface, radius = 3.dp.toPx(), center = Offset(x, y))
+                    } else {
+                        drawCircle(color = colors.surface, radius = 4.dp.toPx(), center = Offset(x, y))
+                        drawCircle(color = colors.primary.copy(alpha = 0.5f), radius = 3.dp.toPx(), center = Offset(x, y))
+                    }
                 }
             }
-            Spacer(Modifier.height(4.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                val entradasOrdenadas = entradas.sortedBy { it.dataAvaliacao }
-                Text(formatarDataCurta(entradasOrdenadas.firstOrNull()?.dataAvaliacao), style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
-                Text(formatarDataCurta(entradasOrdenadas.lastOrNull()?.dataAvaliacao), style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
+
+            val si = selectedIndex.coerceIn(0, pontos.lastIndex)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    formatarDataCurta(entradasOrdenadas.getOrNull(si)?.dataAvaliacao),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.textSecondary,
+                    fontSize = 10.sp
+                )
+                Text(
+                    "%.1f kg".format(pontos[si]),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.primary
+                )
             }
         }
     }
