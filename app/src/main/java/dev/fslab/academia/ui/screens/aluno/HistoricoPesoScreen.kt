@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +28,8 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +39,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +66,14 @@ import dev.fslab.academia.ui.viewmodel.HistoricoPesoViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+private enum class PeriodoFiltro(val label: String, val meses: Long?) {
+    UM_MES("1m", 1),
+    TRES_MESES("3m", 3),
+    SEIS_MESES("6m", 6),
+    UM_ANO("1a", 12),
+    TUDO("tudo", null)
+}
 
 @Composable
 fun HistoricoPesoScreen(
@@ -128,6 +142,23 @@ fun HistoricoPesoScreen(
 
 @Composable
 private fun HistoricoPesoConteudo(data: HistoricoPesoData, colors: AcademiaColors) {
+    var periodoSelecionado by remember { mutableStateOf(PeriodoFiltro.TUDO) }
+
+    val entradasFiltradas = remember(periodoSelecionado, data.entradas) {
+        val meses = periodoSelecionado.meses
+        if (meses == null) {
+            data.entradas
+        } else {
+            val limite = LocalDate.now().minusMonths(meses)
+            data.entradas.filter { entrada ->
+                try {
+                    val data = LocalDate.parse(entrada.dataAvaliacao.substring(0, 10))
+                    !data.isBefore(limite)
+                } catch (_: Exception) { true }
+            }
+        }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -137,23 +168,86 @@ private fun HistoricoPesoConteudo(data: HistoricoPesoData, colors: AcademiaColor
             MetricasPesoCard(metricas = data.metricas, colors = colors)
         }
 
-        if (data.entradas.size >= 2) {
+        item {
+            FiltrosPeriodo(
+                selecionado = periodoSelecionado,
+                onSelecionar = { periodoSelecionado = it },
+                colors = colors
+            )
+        }
+
+        if (entradasFiltradas.size >= 2) {
             item {
-                GraficoPeso(entradas = data.entradas, colors = colors)
+                GraficoPeso(entradas = entradasFiltradas, colors = colors)
             }
         }
 
         item {
+            val quantidade = entradasFiltradas.size
             Text(
-                "Registros",
+                "Registros ($quantidade)",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.textSecondary
             )
         }
 
-        items(data.entradas.sortedByDescending { it.dataAvaliacao }) { entrada ->
-            EntradaPesoCard(entrada = entrada, colors = colors)
+        if (entradasFiltradas.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Nenhum registro no período selecionado",
+                        color = colors.textSecondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        } else {
+            items(entradasFiltradas.sortedByDescending { it.dataAvaliacao }) { entrada ->
+                EntradaPesoCard(entrada = entrada, colors = colors)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FiltrosPeriodo(
+    selecionado: PeriodoFiltro,
+    onSelecionar: (PeriodoFiltro) -> Unit,
+    colors: AcademiaColors
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp)
+    ) {
+        items(PeriodoFiltro.entries) { periodo ->
+            val ativo = periodo == selecionado
+            FilterChip(
+                selected = ativo,
+                onClick = { onSelecionar(periodo) },
+                label = {
+                    Text(
+                        periodo.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (ativo) FontWeight.Bold else FontWeight.Normal
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = colors.primary.copy(alpha = 0.15f),
+                    selectedLabelColor = colors.primary,
+                    containerColor = colors.surface,
+                    labelColor = colors.textSecondary
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = ativo,
+                    selectedBorderColor = colors.primary,
+                    borderColor = colors.lightGray.copy(alpha = 0.4f)
+                )
+            )
         }
     }
 }
