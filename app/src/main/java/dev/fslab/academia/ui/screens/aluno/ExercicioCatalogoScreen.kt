@@ -49,6 +49,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -252,21 +253,27 @@ fun ExercicioCatalogoScreen(
                         item { CardVazio() }
                     }
                     is ExercicioListUiState.Success -> {
-                        if (state.totalPages > 1) {
-                            item {
-                                Text(
-                                    "Página ${state.page} de ${state.totalPages}",
-                                    color = colors.textSecondary,
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            }
-                        }
                         items(state.exercicios, key = { it.id }) { exercicio ->
                             Box(Modifier.animateItem()) {
                                 ExercicioCard(
                                     exercicio = exercicio,
                                     onClick = { onAbrirDetalhe(exercicio.id) }
                                 )
+                            }
+                        }
+                        if (state.page < state.totalPages) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    OutlinedButton(onClick = { viewModel.carregarMais() }) {
+                                        Text(
+                                            "Carregar mais (${state.exercicios.size}/${state.total})",
+                                            color = colors.primary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

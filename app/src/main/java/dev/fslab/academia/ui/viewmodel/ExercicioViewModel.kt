@@ -91,10 +91,16 @@ class ExercicioViewModel : ViewModel() {
         carregar()
     }
 
-    fun carregar(page: Int = 1) {
+    fun carregarMais() {
+        val current = _uiState.value as? ExercicioListUiState.Success ?: return
+        if (current.page >= current.totalPages) return
+        carregar(page = current.page + 1, append = current.exercicios)
+    }
+
+    fun carregar(page: Int = 1, append: List<dev.fslab.academia.model.ExercicioData> = emptyList()) {
         val f = _filtros.value
         viewModelScope.launch {
-            _uiState.value = ExercicioListUiState.Loading
+            if (append.isEmpty()) _uiState.value = ExercicioListUiState.Loading
             try {
                 val resposta = RetrofitClient.exercicioApi.listar(
                     page = page,
@@ -112,14 +118,15 @@ class ExercicioViewModel : ViewModel() {
                 val brutos = pagina?.dados.orEmpty()
                 val temFiltroClient = f.musculoIds.isNotEmpty() || f.aparelhoIds.isNotEmpty()
 
-                var lista = brutos
+                var novos = brutos
                 if (f.musculoIds.isNotEmpty()) {
-                    lista = lista.filter { ex -> ex.musculos.any { it.musculoId in f.musculoIds } }
+                    novos = novos.filter { ex -> ex.musculos.any { it.musculoId in f.musculoIds } }
                 }
                 if (f.aparelhoIds.isNotEmpty()) {
-                    lista = lista.filter { ex -> ex.aparelhos.any { it.aparelhoId in f.aparelhoIds } }
+                    novos = novos.filter { ex -> ex.aparelhos.any { it.aparelhoId in f.aparelhoIds } }
                 }
 
+                val lista = append + novos
                 _uiState.value = if (lista.isEmpty()) {
                     ExercicioListUiState.Empty
                 } else if (temFiltroClient) {

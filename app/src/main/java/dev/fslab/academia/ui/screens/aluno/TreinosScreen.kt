@@ -40,6 +40,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -52,6 +53,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -86,6 +89,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TreinosScreen(
     onBack: () -> Unit,
@@ -103,6 +107,8 @@ fun TreinosScreen(
     var modoReorder by remember { mutableStateOf(false) }
     var ordemLocal by remember { mutableStateOf<List<TreinoData>>(emptyList()) }
     var mostrarMaisMenu by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullToRefreshState()
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         val fromIdx = ordemLocal.indexOfFirst { it.id == from.key }
@@ -120,6 +126,7 @@ fun TreinosScreen(
         if (uiState is TreinoListUiState.Success && modoReorder) {
             ordemLocal = (uiState as TreinoListUiState.Success).treinos
         }
+        if (uiState !is TreinoListUiState.Loading) isRefreshing = false
     }
 
     LaunchedEffect(reorderState) {
@@ -225,6 +232,12 @@ fun TreinosScreen(
             }
         }
     ) { innerPadding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { if (!modoReorder) { isRefreshing = true; viewModel.carregar() } },
+            state = pullRefreshState,
+            modifier = Modifier.padding(innerPadding)
+        ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -233,7 +246,6 @@ fun TreinosScreen(
                         colors = listOf(colors.backgroundGradientStart, colors.backgroundGradientEnd)
                     )
                 )
-                .padding(innerPadding)
         ) {
             LazyColumn(
                 state = lazyListState,
@@ -364,6 +376,7 @@ fun TreinosScreen(
                 item { Spacer(Modifier.height(8.dp)) }
             }
         }
+        } // PullToRefreshBox
     }
 
     if (mostrarMaisMenu) {
