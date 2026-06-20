@@ -29,6 +29,8 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -79,6 +81,7 @@ private val STATUS_LABELS = listOf(null to "Todas", "CONCLUIDA" to "Concluídas"
 @Composable
 fun HistoricoScreen(
     onNavigateTab: (String) -> Unit = {},
+    onLogout: () -> Unit = {},
     onAbrirProgressao: (String, String) -> Unit = { _, _ -> },
     onAbrirSessao: (String) -> Unit = {},
     viewModel: HistoricoViewModel = viewModel()
@@ -93,10 +96,16 @@ fun HistoricoScreen(
 
     var mostrarMaisMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullToRefreshState()
     val datePickerState = rememberDateRangePickerState()
 
     LaunchedEffect(Unit) {
         viewModel.carregarHistorico()
+    }
+
+    LaunchedEffect(uiState) {
+        if (uiState !is HistoricoUiState.Loading) isRefreshing = false
     }
 
     if (showDatePicker) {
@@ -134,14 +143,20 @@ fun HistoricoScreen(
         },
         containerColor = colors.background
     ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { isRefreshing = true; viewModel.carregarHistorico() },
+            state = pullRefreshState,
+            modifier = Modifier.padding(padding)
+        ) {
         when (val state = uiState) {
             is HistoricoUiState.Loading -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = colors.primary)
                 }
             }
             is HistoricoUiState.Error -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
                         Text(state.message, color = colors.errorText, style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(12.dp))
@@ -154,7 +169,7 @@ fun HistoricoScreen(
             }
             is HistoricoUiState.Success -> {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(padding),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
                     item {
@@ -316,12 +331,14 @@ fun HistoricoScreen(
                 }
             }
         }
+        } // PullToRefreshBox
     }
 
     if (mostrarMaisMenu) {
         MaisMenuBottomSheet(
             onDismiss = { mostrarMaisMenu = false },
-            onNavegar = { route -> onNavigateTab(route) }
+            onNavegar = { route -> onNavigateTab(route) },
+            onLogout = onLogout
         )
     }
 }

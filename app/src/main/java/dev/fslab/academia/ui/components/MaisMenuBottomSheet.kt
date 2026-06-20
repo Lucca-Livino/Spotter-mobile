@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,15 +44,15 @@ val maisMenuItems = listOf(
     MaisMenuItem("Exercícios", "Catálogo e gerenciamento completo", Icons.AutoMirrored.Filled.DirectionsRun, "exercicio_catalogo"),
     MaisMenuItem("Aparelhos", "Equipamentos disponíveis na academia", Icons.Filled.Build, "aparelhos"),
     MaisMenuItem("Perfil", "Suas informações e conta", Icons.Filled.Person, "perfil"),
-    MaisMenuItem("Configurações", "Tema, notificações e preferências", Icons.Filled.Settings, "configuracoes"),
-    MaisMenuItem("Notificações", "Avisos e atualizações", Icons.Filled.Notifications, "notificacoes"),
+    MaisMenuItem("Configurações", "Tema e preferências", Icons.Filled.Settings, "configuracoes"),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaisMenuBottomSheet(
     onDismiss: () -> Unit,
-    onNavegar: (String) -> Unit
+    onNavegar: (String) -> Unit,
+    onLogout: (() -> Unit)? = null
 ) {
     val colors = LocalAcademiaColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -111,6 +111,42 @@ fun MaisMenuBottomSheet(
                         color = colors.lightGray.copy(alpha = 0.5f),
                         modifier = Modifier.padding(horizontal = 4.dp)
                     )
+                }
+            }
+
+            if (onLogout != null) {
+                HorizontalDivider(
+                    color = colors.lightGray.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onLogout(); onDismiss() }
+                        .padding(vertical = 14.dp, horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Sair",
+                        tint = colors.error,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Sair",
+                            color = colors.error,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "Encerrar sessão",
+                            color = colors.textSecondary,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 }
             }
 

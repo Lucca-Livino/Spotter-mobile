@@ -30,22 +30,3 @@ data class AlunoListResponse(
     @SerializedName("errors") val errors: List<Map<String, Any?>> = emptyList()
 )
 
-data class HistoricoPesoData(
-    @SerializedName("peso_atual_kg") val pesoAtualKg: Double?,
-    @SerializedName("peso_minimo_kg") val pesoMinimoKg: Double?,
-    @SerializedName("peso_maximo_kg") val pesoMaximoKg: Double?,
-    @SerializedName("variacao_total_kg") val variacaoTotalKg: Double?,
-    @SerializedName("variacao_ultima_semana_kg") val variacaoUltimaSemanKg: Double?,
-    @SerializedName("tendencia") val tendencia: String?,
-    @SerializedName("total_registros") val totalRegistros: Int = 0
-)
-
-data class HistoricoPesoWrapper(
-    @SerializedName("entradas") val entradas: List<Any> = emptyList(),
-    @SerializedName("metricas") val metricas: HistoricoPesoData? = null
-)
-
-data class HistoricoPesoResponse(
-    @SerializedName("error") val error: Boolean = false,
-    @SerializedName("data") val data: HistoricoPesoWrapper? = null
-)

@@ -31,8 +31,8 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Loop
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AssistChip
@@ -49,6 +49,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -94,6 +95,7 @@ import dev.fslab.academia.ui.viewmodel.ExercicioViewModel
 fun ExercicioCatalogoScreen(
     onBack: () -> Unit,
     onNavigateTab: (String) -> Unit,
+    onLogout: () -> Unit = {},
     onAbrirDetalhe: (String) -> Unit = {},
     onCriar: () -> Unit = {},
     viewModel: ExercicioViewModel = viewModel()
@@ -252,21 +254,27 @@ fun ExercicioCatalogoScreen(
                         item { CardVazio() }
                     }
                     is ExercicioListUiState.Success -> {
-                        if (state.totalPages > 1) {
-                            item {
-                                Text(
-                                    "Página ${state.page} de ${state.totalPages}",
-                                    color = colors.textSecondary,
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            }
-                        }
                         items(state.exercicios, key = { it.id }) { exercicio ->
                             Box(Modifier.animateItem()) {
                                 ExercicioCard(
                                     exercicio = exercicio,
                                     onClick = { onAbrirDetalhe(exercicio.id) }
                                 )
+                            }
+                        }
+                        if (state.page < state.totalPages) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    OutlinedButton(onClick = { viewModel.carregarMais() }) {
+                                        Text(
+                                            "Carregar mais (${state.exercicios.size}/${state.total})",
+                                            color = colors.primary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -303,7 +311,8 @@ fun ExercicioCatalogoScreen(
     if (mostrarMaisMenu) {
         MaisMenuBottomSheet(
             onDismiss = { mostrarMaisMenu = false },
-            onNavegar = { route -> onNavigateTab(route) }
+            onNavegar = { route -> onNavigateTab(route) },
+            onLogout = onLogout
         )
     }
 }
@@ -399,6 +408,27 @@ private fun BarraFiltros(
             colors = academiaFilterChipColors()
         )
         FilterChip(
+            selected = filtros.tipoExercicio == TipoExercicio.REPETICAO,
+            onClick = { onAlternarTipo(TipoExercicio.REPETICAO) },
+            label = { Text("Repetição") },
+            leadingIcon = { Icon(Icons.Filled.Repeat, null, modifier = Modifier.size(18.dp)) },
+            colors = academiaFilterChipColors()
+        )
+        FilterChip(
+            selected = filtros.tipoExercicio == TipoExercicio.TEMPO,
+            onClick = { onAlternarTipo(TipoExercicio.TEMPO) },
+            label = { Text("Tempo") },
+            leadingIcon = { Icon(Icons.Filled.Timer, null, modifier = Modifier.size(18.dp)) },
+            colors = academiaFilterChipColors()
+        )
+        FilterChip(
+            selected = filtros.tipoExercicio == TipoExercicio.DISTANCIA,
+            onClick = { onAlternarTipo(TipoExercicio.DISTANCIA) },
+            label = { Text("Distância") },
+            leadingIcon = { Icon(Icons.Filled.Straighten, null, modifier = Modifier.size(18.dp)) },
+            colors = academiaFilterChipColors()
+        )
+        FilterChip(
             selected = filtros.comMidia == true,
             onClick = onAlternarComMidia,
             label = { Text(if (filtros.comMidia == false) "Sem animação" else "Com animação") },
@@ -409,7 +439,7 @@ private fun BarraFiltros(
             selected = filtros.tipoExercicio == TipoExercicio.REPETICAO,
             onClick = { onAlternarTipo(TipoExercicio.REPETICAO) },
             label = { Text("Repetição") },
-            leadingIcon = { Icon(Icons.Filled.Loop, null, modifier = Modifier.size(18.dp)) },
+            leadingIcon = { Icon(Icons.Filled.Repeat, null, modifier = Modifier.size(18.dp)) },
             colors = academiaFilterChipColors()
         )
         FilterChip(

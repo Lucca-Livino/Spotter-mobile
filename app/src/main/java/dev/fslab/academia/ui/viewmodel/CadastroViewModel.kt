@@ -92,7 +92,7 @@ class CadastroViewModel : ViewModel() {
         sexo: String,
         academiaId: String,
         peso: Double?,
-        altura: Double?
+        altura: Int?
     ) {
         if (academiaId.isBlank()) {
             _uiState.value = CadastroUiState.Erro("Selecione uma unidade/academia")
@@ -138,7 +138,7 @@ class CadastroViewModel : ViewModel() {
                     put("academia_id", academiaId)
                     // Enviar apenas se não for nulo
                     peso?.let { put("peso_atual_kg", it) }
-                    altura?.let { put("altura_m", it) }
+                    altura?.let { put("altura_cm", it) }
                 }
                 
                 android.util.Log.d("CadastroViewModel", "Enviando perfil: ${profileJson.toString()}")

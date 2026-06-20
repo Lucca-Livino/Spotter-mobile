@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.fslab.academia.model.AlunoData
-import dev.fslab.academia.model.HistoricoPesoData
+import dev.fslab.academia.model.HistoricoPesoMetricas
 import dev.fslab.academia.model.TreinoData
 import dev.fslab.academia.ui.components.AcademiaAppBar
 import dev.fslab.academia.ui.components.ExerciciosFrequentesSection
@@ -659,7 +659,7 @@ private fun AvatarCliente(nome: String, size: androidx.compose.ui.unit.Dp) {
 }
 
 @Composable
-private fun SecaoPesoAluno(historicoPeso: HistoricoPesoData, colors: dev.fslab.academia.ui.theme.AcademiaColors) {
+private fun SecaoPesoAluno(historicoPeso: HistoricoPesoMetricas, colors: dev.fslab.academia.ui.theme.AcademiaColors) {
     val tendenciaIcon = when (historicoPeso.tendencia) {
         "SUBINDO" -> Icons.AutoMirrored.Filled.TrendingUp
         "DESCENDO" -> Icons.AutoMirrored.Filled.TrendingDown

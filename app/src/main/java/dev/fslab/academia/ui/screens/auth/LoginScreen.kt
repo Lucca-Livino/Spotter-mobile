@@ -230,17 +230,18 @@ fun LoginScreen(
                 letterSpacing = (-0.75).sp
             )
 
-            // ─── Slogan (Figma 40:15) ────────────────────────────────
-            Text(
-                text = "PROFESSIONAL TRAINING CENTER",
-                color = colors.textSecondary.copy(alpha = 0.8f),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Light,
-                letterSpacing = 0.35.sp,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+            if (alturaTela >= 580.dp) {
+                Text(
+                    text = "PROFESSIONAL TRAINING CENTER",
+                    color = colors.textSecondary.copy(alpha = 0.8f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Light,
+                    letterSpacing = 0.35.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(dimens.spaceMd))
+            Spacer(modifier = Modifier.height(if (alturaTela < 580.dp) dimens.spaceSm else dimens.spaceMd))
 
             // ─── Headline (Figma 40:19) ──────────────────────────────
             Text(
@@ -464,6 +465,7 @@ fun LoginScreen(
                         modifier = Modifier.clickable { onRegister() }
                     )
                 }
+                Spacer(modifier = Modifier.height(dimens.spaceLg))
             }
         }
         }

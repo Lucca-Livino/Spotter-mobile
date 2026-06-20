@@ -41,6 +41,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -52,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -145,9 +148,15 @@ fun HomeScreen(
     val homeUiState by homeViewModel.uiState.collectAsState()
     val streakState by homeViewModel.streak.collectAsState()
     val vinculoState by homeViewModel.vinculoState.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullToRefreshState()
 
     LaunchedEffect(Unit) {
         homeViewModel.carregarDados()
+    }
+
+    LaunchedEffect(homeUiState) {
+        if (homeUiState !is HomeUiState.Loading) isRefreshing = false
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -184,11 +193,16 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { isRefreshing = true; homeViewModel.carregarDados() },
+            state = pullRefreshState,
+            modifier = Modifier.padding(innerPadding)
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(innerPadding)
                 .padding(horizontal = dimens.screenPaddingH)
         ) {
             Spacer(modifier = Modifier.height(dimens.spaceLg))
@@ -673,11 +687,18 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Aproveite para descansar ou criar um novo treino",
+                                text = "Descanse ou crie um novo treino",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.textSecondary.copy(alpha = 0.7f),
                                 textAlign = TextAlign.Center
                             )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = onOpenTreinos,
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
+                            ) {
+                                Text("Ver meus treinos", color = colors.textOnPrimary)
+                            }
                         }
                     }
                 }
@@ -744,12 +765,14 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
         }
+        } // PullToRefreshBox
     }
 
     if (mostrarMaisMenu) {
         MaisMenuBottomSheet(
             onDismiss = { mostrarMaisMenu = false },
-            onNavegar = { route -> onNavigateTab(route) }
+            onNavegar = { route -> onNavigateTab(route) },
+            onLogout = onLogout
         )
     }
 }

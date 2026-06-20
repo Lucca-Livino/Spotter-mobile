@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,6 +31,7 @@ import dev.fslab.academia.ui.components.alunoNavItems
 import dev.fslab.academia.ui.components.treinadorNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
 import dev.fslab.academia.ui.theme.LocalDimens
+import dev.fslab.academia.ui.viewmodel.ChatMensagensUiState
 import dev.fslab.academia.ui.viewmodel.ChatViewModel
 import dev.fslab.academia.ui.viewmodel.ConversaIniciarUiState
 import dev.fslab.academia.ui.viewmodel.ConversaListUiState
@@ -43,6 +45,7 @@ import java.time.format.DateTimeFormatter
 fun ChatScreen(
     userTipo: UserTipo,
     onNavigateTab: (String) -> Unit,
+    onLogout: () -> Unit = {},
     onOpenConversa: (String) -> Unit,
     viewModel: ConversasViewModel = viewModel(),
     chatViewModel: ChatViewModel = viewModel()
@@ -56,6 +59,7 @@ fun ChatScreen(
     val navegarConversa by viewModel.navegarConversa.collectAsState()
 
     val conversaIdAluno by chatViewModel.conversaId.collectAsState()
+    val mensagensState by chatViewModel.mensagensState.collectAsState()
 
     LaunchedEffect(Unit) {
         if (userTipo == UserTipo.TREINADOR) {
@@ -125,12 +129,19 @@ fun ChatScreen(
                     onAbrir = { alunoId -> viewModel.iniciarConversa(alunoId) }
                 )
             } else {
-                ChatConversationBody(
-                    conversaId = conversaIdAluno,
-                    userTipo = userTipo,
-                    viewModel = chatViewModel,
-                    modifier = Modifier.fillMaxSize()
-                )
+                if (conversaIdAluno.isNullOrBlank() && mensagensState !is ChatMensagensUiState.Loading) {
+                    SemTreinadorPlaceholder(
+                        onBuscarTreinador = { onNavigateTab("buscar_treinador") },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    ChatConversationBody(
+                        conversaId = conversaIdAluno,
+                        userTipo = userTipo,
+                        viewModel = chatViewModel,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
     }
@@ -141,8 +152,69 @@ fun ChatScreen(
             onNavegar = { route ->
                 mostrarMaisMenu = false
                 onNavigateTab(route)
-            }
+            },
+            onLogout = onLogout
         )
+    }
+}
+
+@Composable
+private fun SemTreinadorPlaceholder(
+    onBuscarTreinador: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalAcademiaColors.current
+    val dimens = LocalDimens.current
+    Column(
+        modifier = modifier.padding(horizontal = dimens.screenPaddingH),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(96.dp)
+                .background(colors.primary.copy(alpha = 0.1f), shape = androidx.compose.foundation.shape.CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.PersonSearch,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = colors.primary
+            )
+        }
+        Spacer(modifier = Modifier.height(dimens.spaceLg))
+        Text(
+            text = "Nenhum treinador vinculado",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = colors.textPrimary
+        )
+        Spacer(modifier = Modifier.height(dimens.spaceSm))
+        Text(
+            text = "Conecte-se a um treinador para receber planos personalizados e acompanhar sua evolução em tempo real.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textSecondary,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(dimens.spaceLg))
+        Button(
+            onClick = onBuscarTreinador,
+            colors = ButtonDefaults.buttonColors(containerColor = colors.primary),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Encontrar treinador",
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.textOnPrimary
+            )
+        }
     }
 }
 

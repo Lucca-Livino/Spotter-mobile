@@ -99,18 +99,7 @@ fun TreinoDetalheScreen(
             AcademiaAppBar(
                 title = "Detalhes do treino",
                 showBackButton = true,
-                onBackClick = onBack,
-                actions = {
-                    val sucesso = detalheState as? TreinoDetalheUiState.Success
-                    if (sucesso != null) {
-                        IconButton(onClick = { onEditar(sucesso.treino.id) }) {
-                            Icon(Icons.Filled.Edit, contentDescription = "Editar", tint = colors.textPrimary)
-                        }
-                        IconButton(onClick = { mostrarDialogoExcluir = true }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Excluir", tint = colors.error)
-                        }
-                    }
-                }
+                onBackClick = onBack
             )
         }
     ) { innerPadding ->

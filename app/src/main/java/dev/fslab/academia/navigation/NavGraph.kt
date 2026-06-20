@@ -37,6 +37,9 @@ sealed class Screen(val route: String) {
     data object SessaoDetalhe : Screen("sessao_detalhe/{sessaoId}") {
         fun comId(sessaoId: String) = "sessao_detalhe/$sessaoId"
     }
+    data object HistoricoPeso : Screen("historico_peso/{alunoId}") {
+        fun comId(alunoId: String) = "historico_peso/$alunoId"
+    }
     data object HistoricoProgressao : Screen("historico_progressao?exercicioId={exercicioId}&exercicioNome={exercicioNome}") {
         fun comId(exercicioId: String, exercicioNome: String) =
             "historico_progressao?exercicioId=$exercicioId&exercicioNome=${android.net.Uri.encode(exercicioNome)}"

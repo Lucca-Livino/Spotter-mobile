@@ -1,6 +1,7 @@
 package dev.fslab.academia.network
 
 import dev.fslab.academia.model.AlunoProfileResponse
+import dev.fslab.academia.model.HistoricoPesoResponse
 import dev.fslab.academia.model.TreinadorProfileResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -33,6 +34,9 @@ interface ProfileApi {
         @Part("data") data: RequestBody,
         @Part foto: MultipartBody.Part? = null
     ): AlunoProfileResponse
+
+    @GET("alunos/{id}/historico-peso")
+    suspend fun getHistoricoPeso(@Path("id") id: String): HistoricoPesoResponse
 
     @DELETE("alunos/me/treinador")
     suspend fun desvincularTreinador(): retrofit2.Response<Unit>

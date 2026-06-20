@@ -57,6 +57,7 @@ import dev.fslab.academia.ui.viewmodel.AparelhoViewModel
 fun AparelhosScreen(
     onBack: () -> Unit,
     onNavigateTab: (String) -> Unit,
+    onLogout: () -> Unit = {},
     viewModel: AparelhoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
@@ -172,7 +173,8 @@ fun AparelhosScreen(
     if (mostrarMaisMenu) {
         MaisMenuBottomSheet(
             onDismiss = { mostrarMaisMenu = false },
-            onNavegar = { route -> onNavigateTab(route) }
+            onNavegar = { route -> onNavigateTab(route) },
+            onLogout = onLogout
         )
     }
 }

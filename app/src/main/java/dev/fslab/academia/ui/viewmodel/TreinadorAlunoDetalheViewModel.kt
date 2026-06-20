@@ -6,7 +6,7 @@ import dev.fslab.academia.model.AlunoData
 import dev.fslab.academia.model.EstatisticasData
 import dev.fslab.academia.model.ExercicioFrequenteData
 import dev.fslab.academia.model.GrupoMuscularData
-import dev.fslab.academia.model.HistoricoPesoData
+import dev.fslab.academia.model.HistoricoPesoMetricas
 import dev.fslab.academia.model.TreinoData
 import dev.fslab.academia.network.RetrofitClient
 import kotlinx.coroutines.async
@@ -57,7 +57,7 @@ sealed interface AlunoEstatisticasUiState {
         val grupos: List<GrupoMuscularData>,
         val frequentes: List<ExercicioFrequenteData>,
         val comparativo: ComparativoUiState,
-        val historicoPeso: HistoricoPesoData? = null
+        val historicoPeso: HistoricoPesoMetricas? = null
     ) : AlunoEstatisticasUiState
     data class Error(val message: String) : AlunoEstatisticasUiState
 }
