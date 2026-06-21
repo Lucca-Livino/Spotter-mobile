@@ -30,6 +30,9 @@ data class NavItemData(
 
 const val MAIS_ROUTE = "mais"
 
+fun alunoNavItemsWithBadge(chatBadge: Int): List<NavItemData> =
+    alunoNavItems.map { if (it.route == "chat") it.copy(badgeCount = chatBadge) else it }
+
 val alunoNavItems = listOf(
     NavItemData("Início", Icons.Filled.Home, "home"),
     NavItemData("Treinos", Icons.Filled.FitnessCenter, "treinos"),
@@ -49,7 +52,8 @@ val treinadorNavItems = listOf(
 @Composable
 fun TreinadorNavigationBar(
     selectedIndex: Int,
-    onItemSelected: (Int) -> Unit
+    onItemSelected: (Int) -> Unit,
+    chatBadgeCount: Int = 0
 ) {
     val colors = LocalAcademiaColors.current
 
@@ -58,10 +62,24 @@ fun TreinadorNavigationBar(
         contentColor = colors.primary
     ) {
         treinadorNavItems.forEachIndexed { index, item ->
+            val badge = if (item.route == "chat") chatBadgeCount else 0
             NavigationBarItem(
                 selected = selectedIndex == index,
                 onClick = { onItemSelected(index) },
-                icon = { Icon(item.icon, contentDescription = item.label) },
+                icon = {
+                    if (badge > 0) {
+                        BadgedBox(badge = {
+                            Badge(containerColor = colors.error) {
+                                Text(
+                                    text = if (badge > 99) "99+" else badge.toString(),
+                                    color = colors.textOnPrimary
+                                )
+                            }
+                        }) { Icon(item.icon, contentDescription = item.label) }
+                    } else {
+                        Icon(item.icon, contentDescription = item.label)
+                    }
+                },
                 label = {
                     Text(
                         text = item.label,

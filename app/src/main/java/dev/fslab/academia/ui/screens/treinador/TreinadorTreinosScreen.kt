@@ -59,6 +59,7 @@ fun TreinadorTreinosScreen(
     onNavigateTab: (String) -> Unit,
     onAbrirDetalhe: (String) -> Unit = {},
     onCriar: () -> Unit = {},
+    chatBadgeCount: Int = 0,
     viewModel: TreinoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
@@ -92,6 +93,7 @@ fun TreinadorTreinosScreen(
             val currentIndex = treinadorNavItems.indexOfFirst { it.route == "treinador_treinos" }
             TreinadorNavigationBar(
                 selectedIndex = if (currentIndex >= 0) currentIndex else 1,
+                chatBadgeCount = chatBadgeCount,
                 onItemSelected = { idx ->
                     val route = treinadorNavItems[idx].route
                     onNavigateTab(route)

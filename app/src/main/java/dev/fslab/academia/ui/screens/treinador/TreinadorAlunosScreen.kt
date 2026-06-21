@@ -66,6 +66,7 @@ fun TreinadorAlunosScreen(
     modifier: Modifier = Modifier,
     onOpenCliente: (String) -> Unit = {},
     onNavigateTab: (String) -> Unit = {},
+    chatBadgeCount: Int = 0,
     viewModel: TreinadorAlunosViewModel = viewModel(),
     autoLoad: Boolean = true
 ) {
@@ -97,6 +98,7 @@ fun TreinadorAlunosScreen(
         bottomBar = {
             TreinadorNavigationBar(
                 selectedIndex = navSelected,
+                chatBadgeCount = chatBadgeCount,
                 onItemSelected = { index ->
                     navSelected = index
                     val route = treinadorNavItems[index].route

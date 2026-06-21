@@ -42,6 +42,9 @@ class ChatViewModel : ViewModel() {
     private val _conversaId = MutableStateFlow<String?>(null)
     val conversaId: StateFlow<String?> = _conversaId.asStateFlow()
 
+    private val _unreadCount = MutableStateFlow(0)
+    val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
+
     private var socketJob: Job? = null
 
     fun iniciarConversaAluno() {
@@ -138,10 +141,11 @@ class ChatViewModel : ViewModel() {
         socketJob?.cancel()
         socketJob = viewModelScope.launch {
             ChatSocketManager.mensagens.collect { mensagem ->
-                // Só adiciona se for da conversa atual
                 if (mensagem.conversaId == conversaId) {
                     adicionarMensagem(mensagem)
                     marcarComoLidas(conversaId)
+                } else {
+                    _unreadCount.update { it + 1 }
                 }
             }
         }
@@ -163,6 +167,10 @@ class ChatViewModel : ViewModel() {
                 ChatMensagensUiState.Success(novaLista)
             }
         }
+    }
+
+    fun resetUnreadCount() {
+        _unreadCount.value = 0
     }
 
     private suspend fun marcarComoLidas(conversaId: String) {

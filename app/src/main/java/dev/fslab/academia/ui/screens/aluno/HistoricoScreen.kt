@@ -62,6 +62,7 @@ import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.SecaoEvolucaoPeriodo
 import dev.fslab.academia.ui.components.StatsSection
 import dev.fslab.academia.ui.components.alunoNavItems
+import dev.fslab.academia.ui.components.alunoNavItemsWithBadge
 import dev.fslab.academia.ui.theme.AcademiaColors
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
 import dev.fslab.academia.ui.theme.LocalDimens
@@ -84,6 +85,7 @@ fun HistoricoScreen(
     onLogout: () -> Unit = {},
     onAbrirProgressao: (String, String) -> Unit = { _, _ -> },
     onAbrirSessao: (String) -> Unit = {},
+    chatBadgeCount: Int = 0,
     viewModel: HistoricoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
@@ -133,7 +135,7 @@ fun HistoricoScreen(
         topBar = { AcademiaAppBar("Histórico") },
         bottomBar = {
             AppNavigationBar(
-                items = alunoNavItems,
+                items = alunoNavItemsWithBadge(chatBadgeCount),
                 selectedIndex = 3,
                 onItemSelected = { idx ->
                     val route = alunoNavItems[idx].route

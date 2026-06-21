@@ -21,38 +21,57 @@ class AcademiaFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         const val CHANNEL_ID = "academia_push_channel"
         const val CHANNEL_NAME = "Notificações Academia"
+        const val EXTRA_FCM_ROUTE = "fcm_route"
+
+        fun mapTipoToRoute(tipo: String): String? = when (tipo) {
+            "NOVA_MENSAGEM", "SESSAO_FINALIZADA_TREINADOR" -> "chat"
+            "TREINO_ATRIBUIDO", "TREINO_ATUALIZADO", "TREINO_REMOVIDO" -> "treinos"
+            "SESSAO_INICIADA", "SESSAO_FINALIZADA", "SESSAO_CANCELADA", "AVALIACAO_AGENDADA" -> "historico"
+            else -> null
+        }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         val titulo = message.notification?.title ?: message.data["title"] ?: "Academia"
         val corpo  = message.notification?.body  ?: message.data["body"]  ?: ""
-        exibirNotificacao(titulo, corpo)
+        val tipo   = message.data["tipo"] ?: ""
+        val route  = mapTipoToRoute(tipo)
+
+        NotificationInboxManager.add(
+            NotificacaoLocal(
+                id = System.currentTimeMillis(),
+                titulo = titulo,
+                corpo = corpo,
+                tipo = tipo
+            )
+        )
+
+        exibirNotificacao(titulo, corpo, route)
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Enviar novo token à API de forma assíncrona
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 RetrofitClient.authApi.updateFcmToken(FcmTokenRequest(token))
-            } catch (_: Exception) { /* silencia falha de rede */ }
+            } catch (_: Exception) {}
         }
     }
 
-    private fun exibirNotificacao(titulo: String, corpo: String) {
+    private fun exibirNotificacao(titulo: String, corpo: String, route: String?) {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Criar canal (obrigatório para Android 8+)
         val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
         manager.createNotificationChannel(channel)
 
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            if (route != null) putExtra(EXTRA_FCM_ROUTE, route)
         }
-        
+
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this, System.currentTimeMillis().toInt(), intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 

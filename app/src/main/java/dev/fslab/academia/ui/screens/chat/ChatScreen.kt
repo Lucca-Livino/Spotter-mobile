@@ -28,6 +28,7 @@ import dev.fslab.academia.ui.components.MAIS_ROUTE
 import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.TreinadorNavigationBar
 import dev.fslab.academia.ui.components.alunoNavItems
+import dev.fslab.academia.ui.components.alunoNavItemsWithBadge
 import dev.fslab.academia.ui.components.treinadorNavItems
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
 import dev.fslab.academia.ui.theme.LocalDimens
@@ -47,6 +48,7 @@ fun ChatScreen(
     onNavigateTab: (String) -> Unit,
     onLogout: () -> Unit = {},
     onOpenConversa: (String) -> Unit,
+    chatBadgeCount: Int = 0,
     viewModel: ConversasViewModel = viewModel(),
     chatViewModel: ChatViewModel = viewModel()
 ) {
@@ -62,6 +64,7 @@ fun ChatScreen(
     val mensagensState by chatViewModel.mensagensState.collectAsState()
 
     LaunchedEffect(Unit) {
+        chatViewModel.resetUnreadCount()
         if (userTipo == UserTipo.TREINADOR) {
             viewModel.carregar()
         } else {
@@ -94,7 +97,7 @@ fun ChatScreen(
         bottomBar = {
             if (userTipo == UserTipo.ALUNO) {
                 AppNavigationBar(
-                    items = alunoNavItems,
+                    items = alunoNavItemsWithBadge(chatBadgeCount),
                     selectedIndex = 2,
                     onItemSelected = { idx ->
                         val route = alunoNavItems[idx].route
@@ -107,6 +110,7 @@ fun ChatScreen(
             } else {
                 TreinadorNavigationBar(
                     selectedIndex = 2,
+                    chatBadgeCount = chatBadgeCount,
                     onItemSelected = { index ->
                         val route = treinadorNavItems[index].route
                         if (index != 2) {

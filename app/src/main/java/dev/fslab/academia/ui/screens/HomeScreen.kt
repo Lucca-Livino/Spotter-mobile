@@ -77,6 +77,7 @@ import dev.fslab.academia.ui.components.AppNavigationBar
 import dev.fslab.academia.ui.components.MAIS_ROUTE
 import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
+import dev.fslab.academia.ui.components.alunoNavItemsWithBadge
 import dev.fslab.academia.ui.theme.AcademiaTheme
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
 import dev.fslab.academia.ui.theme.LocalDimens
@@ -139,7 +140,8 @@ fun HomeScreen(
     onIniciarTreino: (String) -> Unit = {},
     onAbrirTreinoDoDia: (String) -> Unit = {},
     onBuscarTreinador: () -> Unit = {},
-    homeViewModel: HomeViewModel = viewModel()
+    homeViewModel: HomeViewModel = viewModel(),
+    chatBadgeCount: Int = 0
 ) {
     val colors = LocalAcademiaColors.current
     val dimens = LocalDimens.current
@@ -180,7 +182,7 @@ fun HomeScreen(
         containerColor = colors.background,
         bottomBar = {
             AppNavigationBar(
-                items = alunoNavItems,
+                items = alunoNavItemsWithBadge(chatBadgeCount),
                 selectedIndex = 0,
                 onItemSelected = { idx ->
                     val route = alunoNavItems[idx].route

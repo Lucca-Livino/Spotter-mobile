@@ -9,6 +9,9 @@ import dev.fslab.academia.network.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException
@@ -40,6 +43,10 @@ class ConversasViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow<ConversaListUiState>(ConversaListUiState.Idle)
     val uiState: StateFlow<ConversaListUiState> = _uiState.asStateFlow()
+
+    val totalUnread: StateFlow<Int> = _uiState
+        .map { state -> (state as? ConversaListUiState.Success)?.clientes?.sumOf { it.mensagensNaoLidas } ?: 0 }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     private val _iniciarState = MutableStateFlow<ConversaIniciarUiState>(ConversaIniciarUiState.Idle)
     val iniciarState: StateFlow<ConversaIniciarUiState> = _iniciarState.asStateFlow()

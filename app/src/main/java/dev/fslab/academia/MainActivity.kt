@@ -61,8 +61,13 @@ import dev.fslab.academia.ui.screens.treinador.TreinadorAlunoDetalheScreen
 import dev.fslab.academia.ui.screens.treinador.TreinadorAlunosScreen
 import dev.fslab.academia.ui.screens.treinador.TreinadorHomeScreen
 import dev.fslab.academia.ui.theme.AcademiaTheme
+import dev.fslab.academia.service.AcademiaFirebaseMessagingService
+import dev.fslab.academia.service.DeepLinkManager
+import dev.fslab.academia.ui.screens.NotificacoesScreen
 import dev.fslab.academia.ui.viewmodel.AuthState
 import dev.fslab.academia.ui.viewmodel.AuthViewModel
+import dev.fslab.academia.ui.viewmodel.ChatViewModel
+import dev.fslab.academia.ui.viewmodel.ConversasViewModel
 import dev.fslab.academia.ui.viewmodel.ExercicioViewModel
 import dev.fslab.academia.ui.viewmodel.CadastroViewModel
 import dev.fslab.academia.ui.viewmodel.PerfilViewModel
@@ -80,6 +85,8 @@ class MainActivity : ComponentActivity() {
     private val perfilViewModel: PerfilViewModel by viewModels()
     private val exercicioViewModel: ExercicioViewModel by viewModels()
     private val cadastroViewModel: CadastroViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by viewModels()
+    private val conversasViewModel: ConversasViewModel by viewModels()
 
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -101,6 +108,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         CookieManager.init(applicationContext)
         enableEdgeToEdge()
+        intent?.getStringExtra(AcademiaFirebaseMessagingService.EXTRA_FCM_ROUTE)?.let {
+            DeepLinkManager.setPendingRoute(it)
+        }
         setContent {
             AcademiaApp(
                 authViewModel = authViewModel,
@@ -108,11 +118,20 @@ class MainActivity : ComponentActivity() {
                 perfilViewModel = perfilViewModel,
                 exercicioViewModel = exercicioViewModel,
                 cadastroViewModel = cadastroViewModel,
+                chatViewModel = chatViewModel,
+                conversasViewModel = conversasViewModel,
                 onGoogleSignIn = {
                     val intent = GoogleSignInHelper.getSignInIntent(this)
                     googleSignInLauncher.launch(intent)
                 }
             )
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra(AcademiaFirebaseMessagingService.EXTRA_FCM_ROUTE)?.let {
+            DeepLinkManager.setPendingRoute(it)
         }
     }
 }
@@ -124,6 +143,8 @@ fun AcademiaApp(
     perfilViewModel: PerfilViewModel,
     exercicioViewModel: ExercicioViewModel,
     cadastroViewModel: CadastroViewModel,
+    chatViewModel: ChatViewModel,
+    conversasViewModel: ConversasViewModel,
     onGoogleSignIn: () -> Unit = {},
     sessaoViewModel: SessaoViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     homeViewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
@@ -142,12 +163,23 @@ fun AcademiaApp(
     val sessaoState by sessaoViewModel.uiState.collectAsState()
     val temSessaoAtiva = sessaoState is SessaoUiState.EmAndamento
 
+    val alunoChatBadge by chatViewModel.unreadCount.collectAsState()
+    val treinadorChatBadge by conversasViewModel.totalUnread.collectAsState()
+    val pendingRoute by DeepLinkManager.pendingRoute.collectAsState()
 
     AcademiaTheme(darkTheme = isDarkTheme) {
         val navController = rememberNavController()
 
         LaunchedEffect(Unit) {
             authViewModel.checkSession()
+        }
+
+        LaunchedEffect(pendingRoute, currentUser) {
+            val route = pendingRoute
+            if (route != null && currentUser != null) {
+                navController.navigateSafely(route)
+                DeepLinkManager.setPendingRoute(null)
+            }
         }
 
         LaunchedEffect(authState) {
@@ -336,7 +368,8 @@ fun AcademiaApp(
                     onBuscarTreinador = {
                         navController.navigateSafely(Screen.BuscarTreinador.route)
                     },
-                    homeViewModel = homeViewModel
+                    homeViewModel = homeViewModel,
+                    chatBadgeCount = alunoChatBadge
                 )
             }
 
@@ -353,8 +386,9 @@ fun AcademiaApp(
                     onNavigateTab = { route ->
                         navController.navigateSafely(route)
                     },
-                    onNotifications = { },
-                    onLogout = { authViewModel.logout() }
+                    onNotifications = { navController.navigateSafely(Screen.Notificacoes.route) },
+                    onLogout = { authViewModel.logout() },
+                    chatBadgeCount = treinadorChatBadge
                 )
             }
 
@@ -408,7 +442,8 @@ fun AcademiaApp(
                 AparelhosScreen(
                     onBack = { navController.popBackStackSafely() },
                     onNavigateTab = { route -> navController.navigateSafely(route) },
-                    onLogout = { authViewModel.logout() }
+                    onLogout = { authViewModel.logout() },
+                    chatBadgeCount = alunoChatBadge
                 )
             }
 
@@ -464,6 +499,7 @@ fun AcademiaApp(
                         }
                     },
                     onLogout = { authViewModel.logout() },
+                    chatBadgeCount = alunoChatBadge,
                     onAbrirDetalhe = { id ->
                         if (currentUser?.tipo == UserTipo.TREINADOR) {
                             navController.navigateSafely(Screen.TreinadorTreinoDetalhe.comId(id))
@@ -579,6 +615,7 @@ fun AcademiaApp(
                 HistoricoScreen(
                     onNavigateTab = { route -> navController.navigateSafely(route) },
                     onLogout = { authViewModel.logout() },
+                    chatBadgeCount = alunoChatBadge,
                     onAbrirProgressao = { exercicioId, exercicioNome ->
                         navController.navigateSafely(
                             Screen.HistoricoProgressao.comId(exercicioId, exercicioNome)
@@ -666,13 +703,17 @@ fun AcademiaApp(
             }
 
             composable(Screen.Chat.route) {
+                val badge = if (currentUser?.tipo == UserTipo.TREINADOR) treinadorChatBadge else alunoChatBadge
                 ChatScreen(
                     userTipo = currentUser?.tipo ?: UserTipo.ALUNO,
                     onNavigateTab = { route -> navController.navigateSafely(route) },
                     onLogout = { authViewModel.logout() },
                     onOpenConversa = { conversaId ->
                         navController.navigateSafely(Screen.ChatDetalhe.comId(conversaId))
-                    }
+                    },
+                    chatViewModel = chatViewModel,
+                    viewModel = conversasViewModel,
+                    chatBadgeCount = badge
                 )
             }
 
@@ -691,11 +732,7 @@ fun AcademiaApp(
             }
 
             composable(Screen.Notificacoes.route) {
-                PlaceholderScreen(
-                    titulo = "Notificações",
-                    descricao = "Central de notificações — implementação futura",
-                    onBack = { navController.popBackStackSafely() }
-                )
+                NotificacoesScreen(onBack = { navController.popBackStackSafely() })
             }
 
             composable(Screen.TreinadorAlunos.route) {
@@ -705,7 +742,8 @@ fun AcademiaApp(
                     },
                     onNavigateTab = { route ->
                         navController.navigateSafely(route)
-                    }
+                    },
+                    chatBadgeCount = treinadorChatBadge
                 )
             }
 
@@ -730,6 +768,7 @@ fun AcademiaApp(
             composable(Screen.TreinadorTreinos.route) {
                 dev.fslab.academia.ui.screens.treinador.TreinadorTreinosScreen(
                     onNavigateTab = { route -> navController.navigateSafely(route) },
+                    chatBadgeCount = treinadorChatBadge,
                     onAbrirDetalhe = { id ->
                         navController.navigateSafely(Screen.TreinadorTreinoDetalhe.comId(id))
                     },

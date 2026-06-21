@@ -48,6 +48,7 @@ import dev.fslab.academia.ui.components.AppNavigationBar
 import dev.fslab.academia.ui.components.MAIS_ROUTE
 import dev.fslab.academia.ui.components.MaisMenuBottomSheet
 import dev.fslab.academia.ui.components.alunoNavItems
+import dev.fslab.academia.ui.components.alunoNavItemsWithBadge
 import dev.fslab.academia.ui.theme.LocalAcademiaColors
 import dev.fslab.academia.ui.theme.LocalDimens
 import dev.fslab.academia.ui.viewmodel.AparelhoUiState
@@ -58,6 +59,7 @@ fun AparelhosScreen(
     onBack: () -> Unit,
     onNavigateTab: (String) -> Unit,
     onLogout: () -> Unit = {},
+    chatBadgeCount: Int = 0,
     viewModel: AparelhoViewModel = viewModel()
 ) {
     val colors = LocalAcademiaColors.current
@@ -88,7 +90,7 @@ fun AparelhosScreen(
         },
         bottomBar = {
             AppNavigationBar(
-                items = alunoNavItems,
+                items = alunoNavItemsWithBadge(chatBadgeCount),
                 selectedIndex = 4,
                 onItemSelected = { idx ->
                     val route = alunoNavItems[idx].route
